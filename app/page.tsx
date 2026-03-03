@@ -67,7 +67,7 @@ export default function HomePage() {
             <input
               type="text"
               placeholder="Search by city, state, or base name..."
-              className="flex-1 rounded-lg px-4 py-3 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#E8A020]"
+              className="flex-1 rounded-lg px-4 py-3 text-white bg-transparent placeholder-blue-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#E8A020] border border-blue-400"
             />
             <Link
               href="/schools"
