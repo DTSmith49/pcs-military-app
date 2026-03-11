@@ -34,14 +34,29 @@ const STEPS = [
 
 const RATINGS = ["1","2","3","4","5"];
 
-function RatingPills({ value, onChange }: { value?: string; onChange: (v: string) => void }) {
+// A-03: role=radiogroup + aria-label on the group, aria-pressed on each pill button
+function RatingPills({
+  value,
+  onChange,
+  groupLabel,
+}: {
+  value?: string;
+  onChange: (v: string) => void;
+  groupLabel: string;
+}) {
   return (
     <div className="flex flex-col gap-1">
-      <div className="flex gap-2 flex-wrap">
+      <div
+        role="radiogroup"
+        aria-label={groupLabel}
+        className="flex gap-2 flex-wrap"
+      >
         {RATINGS.map((r) => (
           <button
             key={r}
             type="button"
+            role="radio"
+            aria-checked={value === r}
             onClick={() => onChange(r)}
             className={`min-w-[44px] min-h-[44px] px-4 py-2 rounded-full text-sm font-semibold border transition-colors ${
               value === r
@@ -53,7 +68,7 @@ function RatingPills({ value, onChange }: { value?: string; onChange: (v: string
           </button>
         ))}
       </div>
-      <div className="flex justify-between text-xs text-slate-400 px-1">
+      <div className="flex justify-between text-xs text-slate-500 px-1" aria-hidden="true">
         <span>Very poor</span>
         <span>Excellent</span>
       </div>
@@ -61,21 +76,30 @@ function RatingPills({ value, onChange }: { value?: string; onChange: (v: string
   );
 }
 
+// A-03: role=radiogroup + aria-label on the group, aria-pressed on each pill button
 function YesNoPills({
   value,
   onChange,
   options,
+  groupLabel,
 }: {
   value?: string;
   onChange: (v: string) => void;
   options: { value: string; label: string }[];
+  groupLabel: string;
 }) {
   return (
-    <div className="flex gap-2 flex-wrap">
+    <div
+      role="radiogroup"
+      aria-label={groupLabel}
+      className="flex gap-2 flex-wrap"
+    >
       {options.map((o) => (
         <button
           key={o.value}
           type="button"
+          role="radio"
+          aria-checked={value === o.value}
           onClick={() => onChange(o.value)}
           className={`min-h-[44px] px-5 py-2 rounded-full text-sm font-semibold border transition-colors ${
             value === o.value
@@ -92,7 +116,7 @@ function YesNoPills({
 
 function ProgressBar({ step }: { step: number }) {
   return (
-    <div className="flex items-center gap-2 mb-8">
+    <div className="flex items-center gap-2 mb-8" aria-label="Form progress">
       {STEPS.map((s, i) => (
         <div key={s.number} className="flex items-center gap-2 flex-1">
           <div className="flex flex-col items-center gap-1 flex-1">
@@ -102,6 +126,7 @@ function ProgressBar({ step }: { step: number }) {
                   ? "bg-[#1B2A4A] text-white"
                   : "bg-slate-200 text-slate-400"
               }`}
+              aria-current={step === s.number ? "step" : undefined}
             >
               {step > s.number ? "✓" : s.number}
             </div>
@@ -110,13 +135,14 @@ function ProgressBar({ step }: { step: number }) {
             </span>
           </div>
           {i < STEPS.length - 1 && (
-            <div className={`flex-1 h-0.5 mb-4 ${step > s.number ? "bg-[#1B2A4A]" : "bg-slate-200"}`} />
+            <div className={`flex-1 h-0.5 mb-4 ${step > s.number ? "bg-[#1B2A4A]" : "bg-slate-200"}`} aria-hidden="true" />
           )}
         </div>
       ))}
     </div>
   );
 }
+
 export default function ReviewPage() {
   const [step, setStep] = useState(1);
   const [submitted, setSubmitted] = useState(false);
@@ -155,7 +181,8 @@ export default function ReviewPage() {
     return (
       <div className="bg-[#F8F7F4] min-h-screen flex items-center justify-center px-4">
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-10 max-w-md w-full text-center flex flex-col gap-4">
-          <div className="text-5xl">🎖️</div>
+          {/* A-05: meaningful emoji */}
+          <span role="img" aria-label="Military medal" className="text-5xl">🎖️</span>
           <h2 className="text-2xl font-bold text-[#1B2A4A]">Thank you for your review.</h2>
           <p className="text-slate-500 text-sm leading-relaxed">
             Your experience helps other military families make better decisions
@@ -181,15 +208,24 @@ export default function ReviewPage() {
           <p className="text-slate-500 text-sm mt-1">
             Help military families find schools that truly support their kids.
           </p>
+          {/* A-07: aria-expanded on privacy toggle */}
           <button
             type="button"
+            aria-expanded={privacyOpen}
+            aria-controls="privacy-notice"
             onClick={() => setPrivacyOpen(!privacyOpen)}
             className="mt-3 text-sm text-[#1B2A4A] underline flex items-center gap-1"
           >
-            ℹ️ Privacy & how this works {privacyOpen ? "▲" : "▼"}
+            <span role="img" aria-label="Information" className="not-italic">ℹ️</span>
+            Privacy &amp; how this works {privacyOpen ? "▲" : "▼"}
           </button>
           {privacyOpen && (
-            <div className="mt-2 bg-blue-50 border border-blue-100 rounded-lg p-4 text-xs text-slate-600 leading-relaxed">
+            <div
+              id="privacy-notice"
+              role="region"
+              aria-label="Privacy notice"
+              className="mt-2 bg-blue-50 border border-blue-100 rounded-lg p-4 text-xs text-slate-600 leading-relaxed"
+            >
               Reviews are anonymous. Do not include full names of children or staff,
               medical details, or personally identifying information. Focus on
               experiences that help other families make informed decisions.
@@ -200,25 +236,30 @@ export default function ReviewPage() {
         <ProgressBar step={step} />
 
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 md:p-8">
-          <form onSubmit={handleSubmit(onSubmit)}>
+          <form onSubmit={handleSubmit(onSubmit)} noValidate>
 
             {step === 1 && (
               <div className="flex flex-col gap-5">
                 <h2 className="text-lg font-bold text-[#1B2A4A]">School Information</h2>
+                {/* A-02: proper <label htmlFor> on all inputs */}
                 <div className="flex flex-col gap-1">
-                  <div className="text-sm font-medium text-slate-700">
-                    School name <span className="text-red-500">*</span>
-                  </div>
+                  <label htmlFor="schoolName" className="text-sm font-medium text-slate-700">
+                    School name <span className="text-red-500" aria-hidden="true">*</span>
+                    <span className="sr-only">(required)</span>
+                  </label>
                   <input
+                    id="schoolName"
                     type="text"
                     {...register("schoolName", { required: true })}
                     className="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B2A4A]"
                     placeholder="e.g., Smith Elementary School"
+                    aria-required="true"
                   />
                 </div>
                 <div className="flex flex-col gap-1">
-                  <div className="text-sm font-medium text-slate-700">City (optional)</div>
+                  <label htmlFor="schoolCity" className="text-sm font-medium text-slate-700">City (optional)</label>
                   <input
+                    id="schoolCity"
                     type="text"
                     {...register("schoolCity")}
                     className="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B2A4A]"
@@ -226,12 +267,15 @@ export default function ReviewPage() {
                   />
                 </div>
                 <div className="flex flex-col gap-1">
-                  <div className="text-sm font-medium text-slate-700">
-                    State <span className="text-red-500">*</span>
-                  </div>
+                  <label htmlFor="schoolState" className="text-sm font-medium text-slate-700">
+                    State <span className="text-red-500" aria-hidden="true">*</span>
+                    <span className="sr-only">(required)</span>
+                  </label>
                   <select
+                    id="schoolState"
                     {...register("schoolState", { required: true })}
                     className="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B2A4A] bg-white"
+                    aria-required="true"
                   >
                     <option value="">Select a state...</option>
                     {US_STATES.map((s) => (
@@ -257,15 +301,16 @@ export default function ReviewPage() {
 
             {step === 2 && (
               <div className="flex flex-col gap-6">
-                <h2 className="text-lg font-bold text-[#1B2A4A]">Enrollment & Transition Experience</h2>
+                <h2 className="text-lg font-bold text-[#1B2A4A]">Enrollment &amp; Transition Experience</h2>
                 <div className="flex flex-col gap-2">
-                  <div className="text-sm font-medium text-slate-700">
+                  <p id="compact-label" className="text-sm font-medium text-slate-700">
                     Did the school demonstrate familiarity with the Interstate Compact?
-                  </div>
-                  <p className="text-xs text-slate-400">Covers enrollment, class placement, credit transfer, and activity eligibility after your PCS.</p>
+                  </p>
+                  <p className="text-xs text-slate-500">Covers enrollment, class placement, credit transfer, and activity eligibility after your PCS.</p>
                   <YesNoPills
                     value={values.interstateCompact}
                     onChange={(v) => setValue("interstateCompact", v as ReviewFormValues["interstateCompact"])}
+                    groupLabel="Interstate Compact familiarity"
                     options={[
                       { value: "yes", label: "Yes" },
                       { value: "no", label: "No" },
@@ -274,13 +319,14 @@ export default function ReviewPage() {
                   />
                 </div>
                 <div className="flex flex-col gap-2">
-                  <div className="text-sm font-medium text-slate-700">
+                  <p id="purple-star-label" className="text-sm font-medium text-slate-700">
                     Is this a Purple Star designated school?
-                  </div>
-                  <p className="text-xs text-slate-400">Purple Star schools have committed staff training and support for military-connected students.</p>
+                  </p>
+                  <p className="text-xs text-slate-500">Purple Star schools have committed staff training and support for military-connected students.</p>
                   <YesNoPills
                     value={values.purpleStar}
                     onChange={(v) => setValue("purpleStar", v as ReviewFormValues["purpleStar"])}
+                    groupLabel="Purple Star designation"
                     options={[
                       { value: "yes", label: "Yes" },
                       { value: "no", label: "No" },
@@ -289,13 +335,14 @@ export default function ReviewPage() {
                   />
                 </div>
                 <div className="flex flex-col gap-2">
-                  <div className="text-sm font-medium text-slate-700">
+                  <p id="iep-label" className="text-sm font-medium text-slate-700">
                     If your child has an IEP or 504 plan, was it honored after your PCS?
-                  </div>
-                  <p className="text-xs text-slate-400">Skip if not applicable to your family.</p>
+                  </p>
+                  <p className="text-xs text-slate-500">Skip if not applicable to your family.</p>
                   <YesNoPills
                     value={values.iep504Status}
                     onChange={(v) => setValue("iep504Status", v as ReviewFormValues["iep504Status"])}
+                    groupLabel="IEP or 504 plan outcome"
                     options={[
                       { value: "honored_promptly", label: "Yes, promptly" },
                       { value: "delayed", label: "Eventually" },
@@ -305,20 +352,8 @@ export default function ReviewPage() {
                   />
                 </div>
                 <div className="flex gap-3 mt-2">
-                  <button
-                    type="button"
-                    onClick={() => setStep(1)}
-                    className="flex-1 border border-slate-300 text-slate-600 font-semibold py-3 rounded-lg hover:bg-slate-50 transition-colors"
-                  >
-                    ← Back
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setStep(3)}
-                    className="flex-1 bg-[#1B2A4A] hover:bg-[#243860] text-white font-semibold py-3 rounded-lg transition-colors"
-                  >
-                    Next: Ratings →
-                  </button>
+                  <button type="button" onClick={() => setStep(1)} className="flex-1 border border-slate-300 text-slate-600 font-semibold py-3 rounded-lg hover:bg-slate-50 transition-colors">← Back</button>
+                  <button type="button" onClick={() => setStep(3)} className="flex-1 bg-[#1B2A4A] hover:bg-[#243860] text-white font-semibold py-3 rounded-lg transition-colors">Next: Ratings →</button>
                 </div>
               </div>
             )}
@@ -327,60 +362,51 @@ export default function ReviewPage() {
               <div className="flex flex-col gap-6">
                 <h2 className="text-lg font-bold text-[#1B2A4A]">Rate Your Experience</h2>
                 <div className="flex flex-col gap-2">
-                  <div className="text-sm font-medium text-slate-700">Academic Experience</div>
-                  <p className="text-xs text-slate-400">Curriculum alignment, credit transfer, course rigor.</p>
-                  <RatingPills value={values.academicExperience} onChange={(v) => setValue("academicExperience", v as ReviewFormValues["academicExperience"])} />
+                  <p className="text-sm font-medium text-slate-700">Academic Experience</p>
+                  <p className="text-xs text-slate-500">Curriculum alignment, credit transfer, course rigor.</p>
+                  <RatingPills groupLabel="Academic Experience rating" value={values.academicExperience} onChange={(v) => setValue("academicExperience", v as ReviewFormValues["academicExperience"])} />
                 </div>
                 <div className="flex flex-col gap-2">
-                  <div className="text-sm font-medium text-slate-700">Community & Belonging</div>
-                  <p className="text-xs text-slate-400">How welcomed your child felt from day one.</p>
-                  <RatingPills value={values.communityBelonging} onChange={(v) => setValue("communityBelonging", v as ReviewFormValues["communityBelonging"])} />
+                  <p className="text-sm font-medium text-slate-700">Community &amp; Belonging</p>
+                  <p className="text-xs text-slate-500">How welcomed your child felt from day one.</p>
+                  <RatingPills groupLabel="Community and Belonging rating" value={values.communityBelonging} onChange={(v) => setValue("communityBelonging", v as ReviewFormValues["communityBelonging"])} />
                 </div>
                 <div className="flex flex-col gap-2">
-                  <div className="text-sm font-medium text-slate-700">Communication & Engagement</div>
-                  <p className="text-xs text-slate-400">Teacher responsiveness and family involvement.</p>
-                  <RatingPills value={values.communicationEngagement} onChange={(v) => setValue("communicationEngagement", v as ReviewFormValues["communicationEngagement"])} />
+                  <p className="text-sm font-medium text-slate-700">Communication &amp; Engagement</p>
+                  <p className="text-xs text-slate-500">Teacher responsiveness and family involvement.</p>
+                  <RatingPills groupLabel="Communication and Engagement rating" value={values.communicationEngagement} onChange={(v) => setValue("communicationEngagement", v as ReviewFormValues["communicationEngagement"])} />
                 </div>
                 <div className="flex flex-col gap-2">
-                  <div className="text-sm font-medium text-slate-700">Special Needs Support</div>
-                  <p className="text-xs text-slate-400">IEP and 504 plan continuity after a move.</p>
-                  <RatingPills value={values.specialNeedsSupport} onChange={(v) => setValue("specialNeedsSupport", v as ReviewFormValues["specialNeedsSupport"])} />
+                  <p className="text-sm font-medium text-slate-700">Special Needs Support</p>
+                  <p className="text-xs text-slate-500">IEP and 504 plan continuity after a move.</p>
+                  <RatingPills groupLabel="Special Needs Support rating" value={values.specialNeedsSupport} onChange={(v) => setValue("specialNeedsSupport", v as ReviewFormValues["specialNeedsSupport"])} />
                 </div>
                 <div className="flex flex-col gap-2">
-                  <div className="text-sm font-medium text-slate-700">Overall Military-Family Fit</div>
-                  <p className="text-xs text-slate-400">Overall support for the realities of military life.</p>
-                  <RatingPills value={values.overallFit} onChange={(v) => setValue("overallFit", v as ReviewFormValues["overallFit"])} />
+                  <p className="text-sm font-medium text-slate-700">Overall Military-Family Fit</p>
+                  <p className="text-xs text-slate-500">Overall support for the realities of military life.</p>
+                  <RatingPills groupLabel="Overall Military-Family Fit rating" value={values.overallFit} onChange={(v) => setValue("overallFit", v as ReviewFormValues["overallFit"])} />
                 </div>
                 <div className="flex gap-3 mt-2">
-                  <button
-                    type="button"
-                    onClick={() => setStep(2)}
-                    className="flex-1 border border-slate-300 text-slate-600 font-semibold py-3 rounded-lg hover:bg-slate-50 transition-colors"
-                  >
-                    ← Back
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setStep(4)}
-                    className="flex-1 bg-[#1B2A4A] hover:bg-[#243860] text-white font-semibold py-3 rounded-lg transition-colors"
-                  >
-                    Next: Comments →
-                  </button>
+                  <button type="button" onClick={() => setStep(2)} className="flex-1 border border-slate-300 text-slate-600 font-semibold py-3 rounded-lg hover:bg-slate-50 transition-colors">← Back</button>
+                  <button type="button" onClick={() => setStep(4)} className="flex-1 bg-[#1B2A4A] hover:bg-[#243860] text-white font-semibold py-3 rounded-lg transition-colors">Next: Comments →</button>
                 </div>
               </div>
             )}
 
             {step === 4 && (
               <div className="flex flex-col gap-5">
-                <h2 className="text-lg font-bold text-[#1B2A4A]">Comments & Submit</h2>
+                <h2 className="text-lg font-bold text-[#1B2A4A]">Comments &amp; Submit</h2>
+                {/* A-02: proper <label htmlFor> on textarea */}
                 <div className="flex flex-col gap-1">
-                  <div className="text-sm font-medium text-slate-700">
+                  <label htmlFor="extraNotes" className="text-sm font-medium text-slate-700">
                     Anything else military families should know?
-                  </div>
-                  <p className="text-xs text-slate-400 mb-1">
+                  </label>
+                  {/* A-08: text-slate-500 for WCAG AA contrast (was text-slate-400) */}
+                  <p className="text-xs text-slate-500 mb-1">
                     Optional. Please avoid names of children or staff, or detailed medical information.
                   </p>
                   <textarea
+                    id="extraNotes"
                     {...register("extraNotes")}
                     rows={5}
                     className="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B2A4A]"
@@ -394,17 +420,11 @@ export default function ReviewPage() {
                   >
                     Submit Your Review
                   </button>
-                  <p className="text-xs text-center text-slate-400 mt-1">
+                  <p className="text-xs text-center text-slate-500 mt-1">
                     Your review helps the next military family land on their feet.
                   </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setStep(3)}
-                  className="text-sm text-slate-400 underline text-center"
-                >
-                  ← Back to Ratings
-                </button>
+                <button type="button" onClick={() => setStep(3)} className="text-sm text-slate-500 underline text-center">← Back to Ratings</button>
               </div>
             )}
 

@@ -22,13 +22,21 @@ export default function RootLayout({
   return (
     <html lang="en" className={jakarta.variable}>
       <body className="font-sans bg-white text-slate-900 antialiased">
+        {/* A-01: Skip navigation link for keyboard / screen-reader users */}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:bg-white focus:text-[#1B2A4A] focus:font-semibold focus:px-4 focus:py-2 focus:rounded focus:shadow"
+        >
+          Skip to main content
+        </a>
+
         <header className="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
           <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
               <span className="text-blue-600 font-bold text-xl tracking-tight">PCS Parent</span>
               <span className="text-slate-800 font-semibold text-xl tracking-tight">SchoolGuide</span>
             </Link>
-            <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600">
+            <nav aria-label="Main navigation" className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600">
               <Link href="/schools" className="hover:text-blue-600 transition-colors">Find Schools</Link>
               <Link href="/review" className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-full transition-colors">Write a Review</Link>
             </nav>
@@ -38,7 +46,8 @@ export default function RootLayout({
           </div>
         </header>
 
-        <main>{children}</main>
+        {/* A-01: id target for skip link */}
+        <main id="main-content">{children}</main>
 
         <footer className="bg-slate-900 text-slate-300 mt-16">
           <div className="mx-auto max-w-6xl px-4 py-10 grid grid-cols-1 md:grid-cols-3 gap-8">
