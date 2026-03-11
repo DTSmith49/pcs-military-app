@@ -1,12 +1,21 @@
 // app/schools/[id]/page.tsx
 import { ratingDimensions } from "@/content/ratingDimensions";
 
-// This is a placeholder fetch function.
-// Replace with your real data fetching (Supabase, etc.).
-async function getSchoolById(id: string) {
-  // TODO: fetch from your database.
-  // The object must have fields that match ratingDimensions keys,
-  // e.g. avg_academic_experience_score, avg_enrollment_transition_score, etc.
+// Explicit School interface — matches DB schema and ratingDimensions keys.
+export interface School {
+  id: string;
+  name: string;
+  avg_academic_experience_score: number | null;
+  avg_enrollment_transition_score: number | null;
+  avg_special_needs_support_score: number | null;
+  avg_community_belonging_score: number | null;
+  avg_communication_engagement_score: number | null;
+  avg_overall_military_friendly_score: number | null;
+}
+
+// Placeholder fetch — replace with a real Supabase query (DB-01 / API-02).
+async function getSchoolById(id: string): Promise<School> {
+  // TODO: fetch from Supabase once DB-01 tables are created.
   return {
     id,
     name: "Example School",
@@ -19,7 +28,7 @@ async function getSchoolById(id: string) {
   };
 }
 
-function SchoolRatings({ school }: { school: any }) {
+function SchoolRatings({ school }: { school: School }) {
   return (
     <section className="space-y-3 mt-8">
       <h2 className="text-xl font-semibold">Military-family ratings</h2>
@@ -29,8 +38,8 @@ function SchoolRatings({ school }: { school: any }) {
       </p>
       <div className="grid gap-3 md:grid-cols-2">
         {ratingDimensions.map((dim) => {
-          const value = school[dim.key];
-          if (value == null) return null;
+          const value = school[dim.key as keyof School];
+          if (value == null || typeof value !== "number") return null;
           return (
             <div key={dim.key} className="rounded border p-3">
               <div className="flex items-baseline justify-between">
@@ -62,8 +71,6 @@ export default async function SchoolPage({
   return (
     <main className="mx-auto max-w-4xl px-4 py-8">
       <h1 className="text-3xl font-semibold">{school.name}</h1>
-
-      {/* Ratings section using your PCS-specific dimensions */}
       <SchoolRatings school={school} />
     </main>
   );
