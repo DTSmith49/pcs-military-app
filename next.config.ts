@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Disable X-Powered-By header to avoid revealing server technology
+  poweredByHeader: false,
 };
 
 export default nextConfig;
