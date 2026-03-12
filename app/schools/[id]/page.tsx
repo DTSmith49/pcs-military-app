@@ -29,14 +29,12 @@ interface Review {
   created_at: string;
 }
 
-// Maps DB column names → ratingDimensions keys so the score bar works
-// with whatever is actually stored in the reviews table.
 const SCORE_MAP: Record<string, keyof Review> = {
-  avg_academic_experience_score:    "academic_experience",
-  avg_enrollment_transition_score:  "enrollment_transition",
-  avg_special_needs_support_score:  "special_needs_support",
-  avg_community_belonging_score:    "community_belonging",
-  avg_communication_engagement_score: "communication_engagement",
+  avg_academic_experience_score:       "academic_experience",
+  avg_enrollment_transition_score:     "enrollment_transition",
+  avg_special_needs_support_score:     "special_needs_support",
+  avg_community_belonging_score:       "community_belonging",
+  avg_communication_engagement_score:  "communication_engagement",
   avg_overall_military_friendly_score: "overall_fit",
 };
 
@@ -64,20 +62,20 @@ function labelFor(field: string | null, map: Record<string, string>) {
 }
 
 const COMPACT_LABELS: Record<string, string> = {
-  yes: "Interstate Compact honored",
-  no: "Interstate Compact NOT honored",
+  yes:      "Interstate Compact honored",
+  no:       "Interstate Compact NOT honored",
   not_sure: "Interstate Compact — not sure",
 };
 const PURPLE_LABELS: Record<string, string> = {
-  yes: "Purple Star school",
-  no: "Not a Purple Star school",
+  yes:      "Purple Star school",
+  no:       "Not a Purple Star school",
   not_sure: "Purple Star — not sure",
 };
 const IEP_LABELS: Record<string, string> = {
   honored_promptly: "IEP/504 honored promptly",
-  delayed: "IEP/504 implementation delayed",
-  not_honored: "IEP/504 not honored",
-  not_applicable: "No IEP/504 (not applicable)",
+  delayed:          "IEP/504 implementation delayed",
+  not_honored:      "IEP/504 not honored",
+  not_applicable:   "No IEP/504 (not applicable)",
 };
 
 // ── Sub-components ────────────────────────────────────────────────────────────
@@ -87,16 +85,23 @@ function ScoreBars({ reviews }: { reviews: Review[] }) {
     <section className="space-y-3 mt-8">
       <h2 className="text-xl font-semibold text-[#1B2A4A]">Average ratings</h2>
       {reviews.length === 0 ? (
-        <p className="text-sm text-slate-500">No ratings yet — be the first to review this school.</p>
+        <p className="text-sm text-slate-500">
+          No ratings yet — be the first to review this school.
+        </p>
       ) : (
         <div className="grid gap-3 md:grid-cols-2">
           {ratingDimensions.map((dim) => {
             const reviewField = SCORE_MAP[dim.key];
             const value = reviewField ? avg(reviews, reviewField) : null;
             return (
-              <div key={dim.key} className="rounded-xl border border-slate-100 bg-white p-4 shadow-sm">
+              <div
+                key={dim.key}
+                className="rounded-xl border border-slate-100 bg-white p-4 shadow-sm"
+              >
                 <div className="flex items-baseline justify-between">
-                  <span className="font-medium text-[#1B2A4A] text-sm">{dim.label}</span>
+                  <span className="font-medium text-[#1B2A4A] text-sm">
+                    {dim.label}
+                  </span>
                   <span className="text-lg font-bold text-[#1B2A4A]">
                     {value !== null ? `${value.toFixed(1)}/5` : "—"}
                   </span>
@@ -129,7 +134,9 @@ function ReviewCard({ review }: { review: Review }) {
   return (
     <div className="rounded-xl border border-slate-100 bg-white p-5 shadow-sm space-y-3">
       <div className="flex items-center justify-between">
-        <span className="text-xs text-slate-400">{formatDate(review.created_at)}</span>
+        <span className="text-xs text-slate-400">
+          {formatDate(review.created_at)}
+        </span>
         {review.overall_fit && (
           <span className="text-sm font-bold text-[#E8A020]">
             Overall: {review.overall_fit}/5
@@ -151,7 +158,9 @@ function ReviewCard({ review }: { review: Review }) {
       )}
 
       {review.extra_notes && (
-        <p className="text-sm text-slate-700 leading-relaxed">{review.extra_notes}</p>
+        <p className="text-sm text-slate-700 leading-relaxed">
+          {review.extra_notes}
+        </p>
       )}
     </div>
   );
@@ -198,7 +207,9 @@ export default async function SchoolPage({
           >
             ← All schools
           </Link>
-          <h1 className="text-3xl md:text-4xl font-bold capitalize">{school.name}</h1>
+          <h1 className="text-3xl md:text-4xl font-bold capitalize">
+            {school.name}
+          </h1>
           <p className="text-blue-200 text-sm">
             {school.city ? `${school.city}, ` : ""}{school.state}
           </p>

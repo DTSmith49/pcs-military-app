@@ -1,129 +1,117 @@
-// app/api/reviews/route.ts
 import { NextResponse } from "next/server";
-import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
+import { createClient } from "@supabase/supabase-js";
 
-const VALID_COMPACT_VALUES = ["yes", "no", "not_sure"];
-const VALID_PURPLE_STAR_VALUES = ["yes", "no", "not_sure"];
-const VALID_IEP_VALUES = ["honored_promptly", "delayed", "not_honored", "not_applicable"];
-const RATING_FIELDS = [
-  "academicExperience",
-  "communityBelonging",
-  "communicationEngagement",
-  "specialNeedsSupport",
-  "overallFit",
-] as const;
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
-export async function POST(request: Request) {
+type IncomingBody = {
+  schoolName: string;
+  schoolCity?: string;
+  schoolState: string;
+  interstateCompact?: "yes" | "no" | "not_sure";
+  purpleStar?: "yes" | "no" | "not_sure";
+  iep504Status?: "honored_promptly" | "delayed" | "not_honored" | "not_applicable";
+  academicExperience?: "1" | "2" | "3" | "4" | "5";
+  communityBelonging?: "1" | "2" | "3" | "4" | "5";
+  communicationEngagement?: "1" | "2" | "3" | "4" | "5";
+  specialNeedsSupport?: "1" | "2" | "3" | "4" | "5";
+  overallFit?: "1" | "2" | "3" | "4" | "5";
+  extraNotes?: string;
+};
+
+export async function POST(req: Request) {
   try {
-    const body = await request.json();
+    const body = (await req.json()) as IncomingBody;
 
-    // ── Input Validation ────────────────────────────────────────────────────
-    if (!body.schoolName || typeof body.schoolName !== "string" || !body.schoolName.trim()) {
-      return NextResponse.json({ error: "schoolName is required" }, { status: 400 });
-    }
-    if (!body.schoolState || typeof body.schoolState !== "string") {
-      return NextResponse.json({ error: "schoolState is required" }, { status: 400 });
-    }
-
-    for (const field of RATING_FIELDS) {
-      if (body[field] != null) {
-        const num = Number(body[field]);
-        if (isNaN(num) || num < 1 || num > 5) {
-          return NextResponse.json(
-            { error: `${field} must be a number between 1 and 5` },
-            { status: 400 }
-          );
-        }
-      }
-    }
-
-    if (body.interstateCompact && !VALID_COMPACT_VALUES.includes(body.interstateCompact)) {
+    if (!body.schoolName || !body.schoolState) {
       return NextResponse.json(
-        { error: `interstateCompact must be one of: ${VALID_COMPACT_VALUES.join(", ")}` },
-        { status: 400 }
-      );
-    }
-    if (body.purpleStar && !VALID_PURPLE_STAR_VALUES.includes(body.purpleStar)) {
-      return NextResponse.json(
-        { error: `purpleStar must be one of: ${VALID_PURPLE_STAR_VALUES.join(", ")}` },
-        { status: 400 }
-      );
-    }
-    if (body.iep504Status && !VALID_IEP_VALUES.includes(body.iep504Status)) {
-      return NextResponse.json(
-        { error: `iep504Status must be one of: ${VALID_IEP_VALUES.join(", ")}` },
-        { status: 400 }
-      );
-    }
-    if (body.extraNotes && body.extraNotes.length > 5000) {
-      return NextResponse.json(
-        { error: "extraNotes must be under 5000 characters" },
+        { error: "Missing school name or state" },
         { status: 400 }
       );
     }
 
-    const supabase = createSupabaseServerClient();
+    // 1) Find or create school
+    const nameTrimmed = body.schoolName.trim();
+    const stateTrimmed = body.schoolState.trim().toUpperCase();
 
-    // Normalize to lowercase before upsert so the plain unique index on
-    // (name, state) handles deduplication case-insensitively.
-    const schoolName = body.schoolName.trim().toLowerCase();
-    const schoolState = body.schoolState.trim().toUpperCase();
-    const schoolCity = body.schoolCity?.trim().toLowerCase() || null;
-
-    // ── Option B: get-or-create school ──────────────────────────────────────
-    // onConflict uses plain column names matching the unique constraint.
-    const { data: schoolData, error: schoolError } = await supabase
+    const { data: existing, error: findError } = await supabase
       .from("schools")
-      .upsert(
-        { name: schoolName, city: schoolCity, state: schoolState },
-        { onConflict: "name,state", ignoreDuplicates: false }
-      )
       .select("id")
-      .single();
+      .eq("name", nameTrimmed)
+      .eq("state", stateTrimmed)
+      .limit(1)
+      .maybeSingle();
 
-    if (schoolError || !schoolData) {
-      console.error("School upsert error", schoolError);
-      return NextResponse.json({ error: "Failed to resolve school" }, { status: 500 });
+    if (findError) {
+      console.error("Error looking up school", findError);
+      return NextResponse.json(
+        { error: "Failed to look up school" },
+        { status: 500 }
+      );
     }
 
-    const schoolId = schoolData.id;
+    let schoolId = existing?.id as string | undefined;
 
-    // ── Insert the review ────────────────────────────────────────────────────
-    const {
-      interstateCompact,
-      purpleStar,
-      iep504Status,
-      academicExperience,
-      communityBelonging,
-      communicationEngagement,
-      specialNeedsSupport,
-      overallFit,
-      extraNotes,
-    } = body;
+    if (!schoolId) {
+      const { data: created, error: createError } = await supabase
+        .from("schools")
+        .insert({
+          name: nameTrimmed,
+          city: body.schoolCity?.trim() || null,
+          state: stateTrimmed,
+        })
+        .select("id")
+        .single();
 
+      if (createError || !created) {
+        console.error("Error creating school", createError);
+        return NextResponse.json(
+          { error: "Failed to create school" },
+          { status: 500 }
+        );
+      }
+
+      schoolId = created.id;
+    }
+
+    // 2) Insert review with school_id
     const { error: reviewError } = await supabase.from("reviews").insert({
       school_id: schoolId,
-      interstate_compact: interstateCompact ?? null,
-      purple_star: purpleStar ?? null,
-      iep504_status: iep504Status ?? null,
-      academic_experience: academicExperience ? Number(academicExperience) : null,
-      community_belonging: communityBelonging ? Number(communityBelonging) : null,
-      communication_engagement: communicationEngagement
-        ? Number(communicationEngagement)
+      interstate_compact: body.interstateCompact ?? null,
+      purple_star: body.purpleStar ?? null,
+      iep504_status: body.iep504Status ?? null,
+      academic_experience: body.academicExperience
+        ? Number(body.academicExperience)
         : null,
-      special_needs_support: specialNeedsSupport ? Number(specialNeedsSupport) : null,
-      overall_fit: overallFit ? Number(overallFit) : null,
-      extra_notes: extraNotes ?? null,
+      community_belonging: body.communityBelonging
+        ? Number(body.communityBelonging)
+        : null,
+      communication_engagement: body.communicationEngagement
+        ? Number(body.communicationEngagement)
+        : null,
+      special_needs_support: body.specialNeedsSupport
+        ? Number(body.specialNeedsSupport)
+        : null,
+      overall_fit: body.overallFit ? Number(body.overallFit) : null,
+      extra_notes: body.extraNotes ?? null,
     });
 
     if (reviewError) {
-      console.error("Review insert error", reviewError);
-      return NextResponse.json({ error: "Failed to save review" }, { status: 500 });
+      console.error("Supabase insert error", reviewError);
+      return NextResponse.json(
+        { error: "Failed to save review" },
+        { status: 500 }
+      );
     }
 
-    return NextResponse.json({ ok: true, schoolId });
+    return NextResponse.json({ ok: true });
   } catch (e) {
-    console.error("Unexpected error", e);
-    return NextResponse.json({ error: "Unexpected error" }, { status: 500 });
+    console.error("POST /api/reviews error", e);
+    return NextResponse.json(
+      { error: "Invalid request" },
+      { status: 400 }
+    );
   }
 }

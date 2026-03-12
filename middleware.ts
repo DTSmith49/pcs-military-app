@@ -113,13 +113,12 @@ export async function middleware(request: NextRequest) {
           method: 'POST',
           headers: {
             cookie: `refresh_token=${refreshToken}`,
-            'x-middleware-refresh': '1', // sentinel so the route can identify middleware calls
+            'x-middleware-refresh': '1',
           },
         },
       )
 
       if (refreshRes.ok) {
-        // Forward the new access_token + refresh_token cookies from the refresh response
         const response = NextResponse.next()
         refreshRes.headers.getSetCookie().forEach((cookie) => {
           response.headers.append('Set-Cookie', cookie)
@@ -139,10 +138,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all paths except Next.js static files and image optimization.
-     * Public paths are filtered inside the middleware function itself.
-     */
     '/((?!_next/static|_next/image|favicon.ico).*)',
   ],
 }
