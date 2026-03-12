@@ -1,0 +1,122 @@
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  78 |                 </Link>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  79 |               </div>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  80 |             ))}
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  81 |           </div>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  82 |         )}
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  83 |       </section>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  84 |
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  85 |       {/* Bottom CTA */}
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  86 |       <section className="mx-auto max-w-6xl px-4 pb-16">
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  87 |         <div className="bg-[#1B2A4A] rounded-2xl p-8 flex flex-col md:flex-row items-center justify-between gap-4 text-white">
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  88 |           <div>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  89 |             <div className="font-bold text-lg">Don&apos;t see your school?</div>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  90 |             <div className="text-blue-200 text-sm mt-1">
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  91 |               Add it when you write your first review. It only takes a school
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  92 |               name and state.
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  93 |             </div>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  94 |           </div>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  95 |           <Link
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  96 |             href="/review"
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  97 |             className="flex-shrink-0 bg-[#E8A020] hover:bg-amber-500 text-[#1B2A4A] font-bold px-6 py-3 rounded-lg text-sm transition-colors"
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  98 |           >
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  99 |             Write a Review
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 100 |           </Link>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 101 |         </div>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 102 |       </section>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 103 |     </div>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 104 |   );
+      | ^^^^^
+  105 | }
+  106 |
+
+Return statement is not allowed here
+
+
+    at <unknown> (./app/schools/page.tsx:14:3)
+dustintsmith@Dustins-MacBook-Pro pcs-military-app % 
+dustintsmith@Dustins-MacBook-Pro pcs-military-app % cd "/Users/dustintsmith/PCS Application/pcs-military-app"
+dustintsmith@Dustins-MacBook-Pro pcs-military-app % npm run build
+
+> pcs-military-app@0.1.0 build
+> next build
+
+▲ Next.js 16.1.6 (Turbopack)
+- Environments: .env.local
+
+  Creating an optimized production build ...
+
+> Build error occurred
+Error: Turbopack build failed with 1 errors:
+./app/schools/page.tsx:2:1
+Export supabaseClient doesn't exist in target module
+  1 | import Link from "next/link";
+> 2 | import { supabaseClient } from "../../lib/supabaseClient";
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  3 |
+  4 | export default async function SchoolsListPage() {
+  5 |   const supabase = supabaseClient;
+
+The export supabaseClient was not found in module [project]/lib/supabaseClient.ts [app-rsc] (ecmascript).
+Did you mean to import supabaseServerClient?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+
+    at <unknown> (./app/schools/page.tsx:2:1)
+dustintsmith@Dustins-MacBook-Pro pcs-military-app % npm run build
+
+> pcs-military-app@0.1.0 build
+> next build
+
+▲ Next.js 16.1.6 (Turbopack)
+- Environments: .env.local
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 741.6ms
+✓ Finished TypeScript in 758.4ms    
+  Collecting page data using 13 workers  .Error: Failed to collect configuration for /schools
+    at ignore-listed frames {
+  [cause]: Error: NEXT_PUBLIC_SUPABASE_URL is required.
+      at module evaluation (.next/server/chunks/ssr/app_schools_page_tsx_ac5d3efa._.js:37:48124)
+      at instantiateModule (.next/server/chunks/ssr/[turbopack]_runtime.js:740:9)
+      at getOrInstantiateModuleFromParent (.next/server/chunks/ssr/[turbopack]_runtime.js:763:12)
+      at Context.esmImport [as i] (.next/server/chunks/ssr/[turbopack]_runtime.js:228:20)
+      at module evaluation (.next/server/chunks/ssr/_d5642890._.js:1:33)
+      at instantiateModule (.next/server/chunks/ssr/[turbopack]_runtime.js:740:9)
+      at getOrInstantiateModuleFromParent (.next/server/chunks/ssr/[turbopack]_runtime.js:763:12)
+      at Context.commonJsRequire [as r] (.next/server/chunks/ssr/[turbopack]_runtime.js:249:12)
+      at I.children.children.page (.next/server/chunks/ssr/_d5642890._.js:1:607)
+}
+
+> Build error occurred
+Error: Failed to collect page data for /schools
+    at ignore-listed frames {
+  type: 'Error'
+}
+dustintsmith@Dustins-MacBook-Pro pcs-military-app % 
