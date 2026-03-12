@@ -18,22 +18,13 @@ export async function POST(request: Request) {
     const body = await request.json();
 
     // ── Input Validation ────────────────────────────────────────────────────
-
-    // schoolName and schoolState are required (replaces schoolId)
     if (!body.schoolName || typeof body.schoolName !== "string" || !body.schoolName.trim()) {
-      return NextResponse.json(
-        { error: "schoolName is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "schoolName is required" }, { status: 400 });
     }
     if (!body.schoolState || typeof body.schoolState !== "string") {
-      return NextResponse.json(
-        { error: "schoolState is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "schoolState is required" }, { status: 400 });
     }
 
-    // Rating fields must be 1–5 if present
     for (const field of RATING_FIELDS) {
       if (body[field] != null) {
         const num = Number(body[field]);
@@ -46,7 +37,6 @@ export async function POST(request: Request) {
       }
     }
 
-    // Enum field validation
     if (body.interstateCompact && !VALID_COMPACT_VALUES.includes(body.interstateCompact)) {
       return NextResponse.json(
         { error: `interstateCompact must be one of: ${VALID_COMPACT_VALUES.join(", ")}` },
@@ -65,8 +55,6 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-
-    // Text length cap
     if (body.extraNotes && body.extraNotes.length > 5000) {
       return NextResponse.json(
         { error: "extraNotes must be under 5000 characters" },
@@ -76,22 +64,19 @@ export async function POST(request: Request) {
 
     const supabase = createSupabaseServerClient();
 
-    const schoolName = body.schoolName.trim();
+    // Normalize to lowercase before upsert so the plain unique index on
+    // (name, state) handles deduplication case-insensitively.
+    const schoolName = body.schoolName.trim().toLowerCase();
     const schoolState = body.schoolState.trim().toUpperCase();
-    const schoolCity = body.schoolCity?.trim() || null;
+    const schoolCity = body.schoolCity?.trim().toLowerCase() || null;
 
-    // ── Option B: get-or-create the school record ────────────────────────────
-    // upsert on the (lower(name), state) unique index.
-    // onConflict targets the index columns; ignoreDuplicates:false means
-    // we get the existing row back if it already exists.
+    // ── Option B: get-or-create school ──────────────────────────────────────
+    // onConflict uses plain column names matching the unique constraint.
     const { data: schoolData, error: schoolError } = await supabase
       .from("schools")
       .upsert(
         { name: schoolName, city: schoolCity, state: schoolState },
-        {
-          onConflict: "lower(name),state",
-          ignoreDuplicates: false,
-        }
+        { onConflict: "name,state", ignoreDuplicates: false }
       )
       .select("id")
       .single();
