@@ -17,17 +17,14 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    // --- Input Validation ---
-
-    // 1. schoolId is required
-    if (!body.schoolId || typeof body.schoolId !== "string") {
-      return NextResponse.json(
-        { error: "schoolId is required and must be a string" },
-        { status: 400 }
-      );
+    // ── Input Validation ────────────────────────────────────────────────────
+    if (!body.schoolName || typeof body.schoolName !== "string" || !body.schoolName.trim()) {
+      return NextResponse.json({ error: "schoolName is required" }, { status: 400 });
+    }
+    if (!body.schoolState || typeof body.schoolState !== "string") {
+      return NextResponse.json({ error: "schoolState is required" }, { status: 400 });
     }
 
-    // 2. Rating fields must be 1–5 if present
     for (const field of RATING_FIELDS) {
       if (body[field] != null) {
         const num = Number(body[field]);
@@ -40,29 +37,24 @@ export async function POST(request: Request) {
       }
     }
 
-    // 3. Enum field validation
     if (body.interstateCompact && !VALID_COMPACT_VALUES.includes(body.interstateCompact)) {
       return NextResponse.json(
         { error: `interstateCompact must be one of: ${VALID_COMPACT_VALUES.join(", ")}` },
         { status: 400 }
       );
     }
-
     if (body.purpleStar && !VALID_PURPLE_STAR_VALUES.includes(body.purpleStar)) {
       return NextResponse.json(
         { error: `purpleStar must be one of: ${VALID_PURPLE_STAR_VALUES.join(", ")}` },
         { status: 400 }
       );
     }
-
     if (body.iep504Status && !VALID_IEP_VALUES.includes(body.iep504Status)) {
       return NextResponse.json(
         { error: `iep504Status must be one of: ${VALID_IEP_VALUES.join(", ")}` },
         { status: 400 }
       );
     }
-
-    // 4. Text length cap
     if (body.extraNotes && body.extraNotes.length > 5000) {
       return NextResponse.json(
         { error: "extraNotes must be under 5000 characters" },
@@ -70,11 +62,34 @@ export async function POST(request: Request) {
       );
     }
 
-    // --- Database Insert ---
     const supabase = createSupabaseServerClient();
 
+    // Normalize to lowercase before upsert so the plain unique index on
+    // (name, state) handles deduplication case-insensitively.
+    const schoolName = body.schoolName.trim().toLowerCase();
+    const schoolState = body.schoolState.trim().toUpperCase();
+    const schoolCity = body.schoolCity?.trim().toLowerCase() || null;
+
+    // ── Option B: get-or-create school ──────────────────────────────────────
+    // onConflict uses plain column names matching the unique constraint.
+    const { data: schoolData, error: schoolError } = await supabase
+      .from("schools")
+      .upsert(
+        { name: schoolName, city: schoolCity, state: schoolState },
+        { onConflict: "name,state", ignoreDuplicates: false }
+      )
+      .select("id")
+      .single();
+
+    if (schoolError || !schoolData) {
+      console.error("School upsert error", schoolError);
+      return NextResponse.json({ error: "Failed to resolve school" }, { status: 500 });
+    }
+
+    const schoolId = schoolData.id;
+
+    // ── Insert the review ────────────────────────────────────────────────────
     const {
-      schoolId,
       interstateCompact,
       purpleStar,
       iep504Status,
@@ -86,7 +101,7 @@ export async function POST(request: Request) {
       extraNotes,
     } = body;
 
-    const { error } = await supabase.from("reviews").insert({
+    const { error: reviewError } = await supabase.from("reviews").insert({
       school_id: schoolId,
       interstate_compact: interstateCompact ?? null,
       purple_star: purpleStar ?? null,
@@ -101,12 +116,12 @@ export async function POST(request: Request) {
       extra_notes: extraNotes ?? null,
     });
 
-    if (error) {
-      console.error("Supabase insert error", error);
+    if (reviewError) {
+      console.error("Review insert error", reviewError);
       return NextResponse.json({ error: "Failed to save review" }, { status: 500 });
     }
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, schoolId });
   } catch (e) {
     console.error("Unexpected error", e);
     return NextResponse.json({ error: "Unexpected error" }, { status: 500 });
