@@ -34,7 +34,6 @@ const STEPS = [
 
 const RATINGS = ["1","2","3","4","5"];
 
-// A-03: role=radiogroup + aria-label on the group, aria-pressed on each pill button
 function RatingPills({
   value,
   onChange,
@@ -76,7 +75,6 @@ function RatingPills({
   );
 }
 
-// A-03: role=radiogroup + aria-label on the group, aria-pressed on each pill button
 function YesNoPills({
   value,
   onChange,
@@ -147,6 +145,8 @@ export default function ReviewPage() {
   const [step, setStep] = useState(1);
   const [submitted, setSubmitted] = useState(false);
   const [privacyOpen, setPrivacyOpen] = useState(false);
+  // P-02: track submit-in-progress to show loading state and prevent double-submit
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { register, handleSubmit, watch, setValue } = useForm<ReviewFormValues>({
     defaultValues: {
@@ -157,9 +157,35 @@ export default function ReviewPage() {
     },
   });
 
-  const values = watch();
+  // P-01: subscribe only to the specific fields used in conditional logic,
+  // avoiding a full re-render on every keystroke in unrelated fields.
+  const [
+    schoolName,
+    schoolState,
+    interstateCompact,
+    purpleStar,
+    iep504Status,
+    academicExperience,
+    communityBelonging,
+    communicationEngagement,
+    specialNeedsSupport,
+    overallFit,
+  ] = watch([
+    "schoolName",
+    "schoolState",
+    "interstateCompact",
+    "purpleStar",
+    "iep504Status",
+    "academicExperience",
+    "communityBelonging",
+    "communicationEngagement",
+    "specialNeedsSupport",
+    "overallFit",
+  ]);
 
   const onSubmit = async (data: ReviewFormValues) => {
+    // P-02: set loading state before fetch, always clear it after
+    setIsSubmitting(true);
     try {
       const res = await fetch("/api/reviews", {
         method: "POST",
@@ -174,6 +200,8 @@ export default function ReviewPage() {
     } catch (e) {
       console.error(e);
       alert("There was a network error. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -181,7 +209,6 @@ export default function ReviewPage() {
     return (
       <div className="bg-[#F8F7F4] min-h-screen flex items-center justify-center px-4">
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-10 max-w-md w-full text-center flex flex-col gap-4">
-          {/* A-05: meaningful emoji */}
           <span role="img" aria-label="Military medal" className="text-5xl">🎖️</span>
           <h2 className="text-2xl font-bold text-[#1B2A4A]">Thank you for your review.</h2>
           <p className="text-slate-500 text-sm leading-relaxed">
@@ -208,7 +235,6 @@ export default function ReviewPage() {
           <p className="text-slate-500 text-sm mt-1">
             Help military families find schools that truly support their kids.
           </p>
-          {/* A-07: aria-expanded on privacy toggle */}
           <button
             type="button"
             aria-expanded={privacyOpen}
@@ -241,7 +267,6 @@ export default function ReviewPage() {
             {step === 1 && (
               <div className="flex flex-col gap-5">
                 <h2 className="text-lg font-bold text-[#1B2A4A]">School Information</h2>
-                {/* A-02: proper <label htmlFor> on all inputs */}
                 <div className="flex flex-col gap-1">
                   <label htmlFor="schoolName" className="text-sm font-medium text-slate-700">
                     School name <span className="text-red-500" aria-hidden="true">*</span>
@@ -285,8 +310,9 @@ export default function ReviewPage() {
                 </div>
                 <button
                   type="button"
+                  // P-01: use destructured watch values, not values.schoolName
                   onClick={() => {
-                    if (!values.schoolName || !values.schoolState) {
+                    if (!schoolName || !schoolState) {
                       alert("Please enter a school name and state.");
                       return;
                     }
@@ -308,7 +334,7 @@ export default function ReviewPage() {
                   </p>
                   <p className="text-xs text-slate-500">Covers enrollment, class placement, credit transfer, and activity eligibility after your PCS.</p>
                   <YesNoPills
-                    value={values.interstateCompact}
+                    value={interstateCompact}
                     onChange={(v) => setValue("interstateCompact", v as ReviewFormValues["interstateCompact"])}
                     groupLabel="Interstate Compact familiarity"
                     options={[
@@ -324,7 +350,7 @@ export default function ReviewPage() {
                   </p>
                   <p className="text-xs text-slate-500">Purple Star schools have committed staff training and support for military-connected students.</p>
                   <YesNoPills
-                    value={values.purpleStar}
+                    value={purpleStar}
                     onChange={(v) => setValue("purpleStar", v as ReviewFormValues["purpleStar"])}
                     groupLabel="Purple Star designation"
                     options={[
@@ -340,7 +366,7 @@ export default function ReviewPage() {
                   </p>
                   <p className="text-xs text-slate-500">Skip if not applicable to your family.</p>
                   <YesNoPills
-                    value={values.iep504Status}
+                    value={iep504Status}
                     onChange={(v) => setValue("iep504Status", v as ReviewFormValues["iep504Status"])}
                     groupLabel="IEP or 504 plan outcome"
                     options={[
@@ -364,27 +390,27 @@ export default function ReviewPage() {
                 <div className="flex flex-col gap-2">
                   <p className="text-sm font-medium text-slate-700">Academic Experience</p>
                   <p className="text-xs text-slate-500">Curriculum alignment, credit transfer, course rigor.</p>
-                  <RatingPills groupLabel="Academic Experience rating" value={values.academicExperience} onChange={(v) => setValue("academicExperience", v as ReviewFormValues["academicExperience"])} />
+                  <RatingPills groupLabel="Academic Experience rating" value={academicExperience} onChange={(v) => setValue("academicExperience", v as ReviewFormValues["academicExperience"])} />
                 </div>
                 <div className="flex flex-col gap-2">
                   <p className="text-sm font-medium text-slate-700">Community &amp; Belonging</p>
                   <p className="text-xs text-slate-500">How welcomed your child felt from day one.</p>
-                  <RatingPills groupLabel="Community and Belonging rating" value={values.communityBelonging} onChange={(v) => setValue("communityBelonging", v as ReviewFormValues["communityBelonging"])} />
+                  <RatingPills groupLabel="Community and Belonging rating" value={communityBelonging} onChange={(v) => setValue("communityBelonging", v as ReviewFormValues["communityBelonging"])} />
                 </div>
                 <div className="flex flex-col gap-2">
                   <p className="text-sm font-medium text-slate-700">Communication &amp; Engagement</p>
                   <p className="text-xs text-slate-500">Teacher responsiveness and family involvement.</p>
-                  <RatingPills groupLabel="Communication and Engagement rating" value={values.communicationEngagement} onChange={(v) => setValue("communicationEngagement", v as ReviewFormValues["communicationEngagement"])} />
+                  <RatingPills groupLabel="Communication and Engagement rating" value={communicationEngagement} onChange={(v) => setValue("communicationEngagement", v as ReviewFormValues["communicationEngagement"])} />
                 </div>
                 <div className="flex flex-col gap-2">
                   <p className="text-sm font-medium text-slate-700">Special Needs Support</p>
                   <p className="text-xs text-slate-500">IEP and 504 plan continuity after a move.</p>
-                  <RatingPills groupLabel="Special Needs Support rating" value={values.specialNeedsSupport} onChange={(v) => setValue("specialNeedsSupport", v as ReviewFormValues["specialNeedsSupport"])} />
+                  <RatingPills groupLabel="Special Needs Support rating" value={specialNeedsSupport} onChange={(v) => setValue("specialNeedsSupport", v as ReviewFormValues["specialNeedsSupport"])} />
                 </div>
                 <div className="flex flex-col gap-2">
                   <p className="text-sm font-medium text-slate-700">Overall Military-Family Fit</p>
                   <p className="text-xs text-slate-500">Overall support for the realities of military life.</p>
-                  <RatingPills groupLabel="Overall Military-Family Fit rating" value={values.overallFit} onChange={(v) => setValue("overallFit", v as ReviewFormValues["overallFit"])} />
+                  <RatingPills groupLabel="Overall Military-Family Fit rating" value={overallFit} onChange={(v) => setValue("overallFit", v as ReviewFormValues["overallFit"])} />
                 </div>
                 <div className="flex gap-3 mt-2">
                   <button type="button" onClick={() => setStep(2)} className="flex-1 border border-slate-300 text-slate-600 font-semibold py-3 rounded-lg hover:bg-slate-50 transition-colors">← Back</button>
@@ -396,12 +422,10 @@ export default function ReviewPage() {
             {step === 4 && (
               <div className="flex flex-col gap-5">
                 <h2 className="text-lg font-bold text-[#1B2A4A]">Comments &amp; Submit</h2>
-                {/* A-02: proper <label htmlFor> on textarea */}
                 <div className="flex flex-col gap-1">
                   <label htmlFor="extraNotes" className="text-sm font-medium text-slate-700">
                     Anything else military families should know?
                   </label>
-                  {/* A-08: text-slate-500 for WCAG AA contrast (was text-slate-400) */}
                   <p className="text-xs text-slate-500 mb-1">
                     Optional. Please avoid names of children or staff, or detailed medical information.
                   </p>
@@ -414,11 +438,29 @@ export default function ReviewPage() {
                   />
                 </div>
                 <div className="flex flex-col gap-1 mt-2">
+                  {/* P-02: disabled + spinner while submitting to prevent double-submit */}
                   <button
                     type="submit"
-                    className="w-full bg-[#E8A020] hover:bg-amber-500 text-[#1B2A4A] font-bold py-4 rounded-lg text-base transition-colors"
+                    disabled={isSubmitting}
+                    className="w-full bg-[#E8A020] hover:bg-amber-500 disabled:opacity-60 disabled:cursor-not-allowed text-[#1B2A4A] font-bold py-4 rounded-lg text-base transition-colors flex items-center justify-center gap-2"
                   >
-                    Submit Your Review
+                    {isSubmitting ? (
+                      <>
+                        <svg
+                          className="animate-spin h-5 w-5 text-[#1B2A4A]"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          aria-hidden="true"
+                        >
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                        </svg>
+                        <span>Submitting…</span>
+                      </>
+                    ) : (
+                      "Submit Your Review"
+                    )}
                   </button>
                   <p className="text-xs text-center text-slate-500 mt-1">
                     Your review helps the next military family land on their feet.
