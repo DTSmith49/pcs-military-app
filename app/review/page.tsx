@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+  type SchoolMode = "existing" | "new";
+  const [schoolMode, setSchoolMode] = useState<SchoolMode>("new");
 import { useForm } from "react-hook-form";
 
 const US_STATES = [
@@ -183,6 +185,15 @@ export default function ReviewPage() {
     "overallFit",
   ]);
 
+    // When a user picks an existing school, call this to fill the form fields
+  function handleExistingSchoolSelect(school: { name: string; state: string; city?: string }) {
+    setValue("schoolName", school.name, { shouldValidate: true });
+    setValue("schoolState", school.state, { shouldValidate: true });
+    if (school.city) {
+      setValue("schoolCity", school.city);
+    }
+  }
+
   const onSubmit = async (data: ReviewFormValues) => {
     // P-02: set loading state before fetch, always clear it after
     setIsSubmitting(true);
@@ -265,65 +276,145 @@ export default function ReviewPage() {
           <form onSubmit={handleSubmit(onSubmit)} noValidate>
 
             {step === 1 && (
-              <div className="flex flex-col gap-5">
-                <h2 className="text-lg font-bold text-[#1B2A4A]">School Information</h2>
-                <div className="flex flex-col gap-1">
-                  <label htmlFor="schoolName" className="text-sm font-medium text-slate-700">
-                    School name <span className="text-red-500" aria-hidden="true">*</span>
-                    <span className="sr-only">(required)</span>
-                  </label>
-                  <input
-                    id="schoolName"
-                    type="text"
-                    {...register("schoolName", { required: true })}
-                    className="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B2A4A]"
-                    placeholder="e.g., Smith Elementary School"
-                    aria-required="true"
-                  />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <label htmlFor="schoolCity" className="text-sm font-medium text-slate-700">City (optional)</label>
-                  <input
-                    id="schoolCity"
-                    type="text"
-                    {...register("schoolCity")}
-                    className="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B2A4A]"
-                    placeholder="e.g., Rockville"
-                  />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <label htmlFor="schoolState" className="text-sm font-medium text-slate-700">
-                    State <span className="text-red-500" aria-hidden="true">*</span>
-                    <span className="sr-only">(required)</span>
-                  </label>
-                  <select
-                    id="schoolState"
-                    {...register("schoolState", { required: true })}
-                    className="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B2A4A] bg-white"
-                    aria-required="true"
-                  >
-                    <option value="">Select a state...</option>
-                    {US_STATES.map((s) => (
-                      <option key={s} value={s}>{s}</option>
-                    ))}
-                  </select>
-                </div>
-                <button
-                  type="button"
-                  // P-01: use destructured watch values, not values.schoolName
-                  onClick={() => {
-                    if (!schoolName || !schoolState) {
-                      alert("Please enter a school name and state.");
-                      return;
-                    }
-                    setStep(2);
-                  }}
-                  className="mt-2 w-full bg-[#1B2A4A] hover:bg-[#243860] text-white font-semibold py-3 rounded-lg transition-colors"
-                >
-                  Next: Enrollment Experience →
-                </button>
-              </div>
-            )}
+  <div className="flex flex-col gap-5">
+    <h2 className="text-lg font-bold text-[#1B2A4A]">School Information</h2>
+
+    {/* Toggle: existing vs new */}
+    <div className="flex gap-2 text-sm">
+      <button
+        type="button"
+        onClick={() => setSchoolMode("existing")}
+        className={`flex-1 rounded-lg border px-3 py-2 font-medium ${
+          schoolMode === "existing"
+            ? "bg-[#1B2A4A] text-white border-[#1B2A4A]"
+            : "bg-slate-50 text-slate-700 border-slate-300"
+        }`}
+      >
+        Choose existing school
+      </button>
+      <button
+        type="button"
+        onClick={() => setSchoolMode("new")}
+        className={`flex-1 rounded-lg border px-3 py-2 font-medium ${
+          schoolMode === "new"
+            ? "bg-[#1B2A4A] text-white border-[#1B2A4A]"
+            : "bg-slate-50 text-slate-700 border-slate-300"
+        }`}
+      >
+        Add a new school
+      </button>
+    </div>
+
+    {schoolMode === "existing" ? (
+      <>
+        <div className="flex flex-col gap-1">
+          <label
+            htmlFor="existingSchool"
+            className="text-sm font-medium text-slate-700"
+          >
+            Search for your school
+          </label>
+          <input
+            id="existingSchool"
+            type="text"
+            className="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B2A4A]"
+            placeholder="Start typing a school name, city, or state… (directory search coming soon)"
+            disabled
+          />
+          <p className="text-xs text-slate-500 mt-1">
+            Directory search will be wired up after this step is connected to
+            your schools database. For now, use “Add a new school” to continue.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => {
+            alert(
+              "School directory search is not hooked up yet. Please use “Add a new school” to continue this review."
+            );
+          }}
+          className="mt-2 w-full bg-slate-200 text-slate-600 font-semibold py-3 rounded-lg cursor-not-allowed"
+        >
+          Next: Enrollment Experience →
+        </button>
+      </>
+    ) : (
+      <>
+        <div className="flex flex-col gap-1">
+          <label
+            htmlFor="schoolName"
+            className="text-sm font-medium text-slate-700"
+          >
+            School name <span className="text-red-500" aria-hidden="true">*</span>
+            <span className="sr-only">(required)</span>
+          </label>
+          <input
+            id="schoolName"
+            type="text"
+            {...register("schoolName", { required: true })}
+            className="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B2A4A]"
+            placeholder="e.g., Smith Elementary School"
+            aria-required="true"
+          />
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label
+            htmlFor="schoolCity"
+            className="text-sm font-medium text-slate-700"
+          >
+            City (optional)
+          </label>
+          <input
+            id="schoolCity"
+            type="text"
+            {...register("schoolCity")}
+            className="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B2A4A]"
+            placeholder="e.g., Rockville"
+          />
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label
+            htmlFor="schoolState"
+            className="text-sm font-medium text-slate-700"
+          >
+            State <span className="text-red-500" aria-hidden="true">*</span>
+            <span className="sr-only">(required)</span>
+          </label>
+          <select
+            id="schoolState"
+            {...register("schoolState", { required: true })}
+            className="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B2A4A] bg-white"
+            aria-required="true"
+          >
+            <option value="">Select a state...</option>
+            {US_STATES.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => {
+            if (!schoolName || !schoolState) {
+              alert("Please enter a school name and state.");
+              return;
+            }
+            setStep(2);
+          }}
+          className="mt-2 w-full bg-[#1B2A4A] hover:bg-[#243860] text-white font-semibold py-3 rounded-lg transition-colors"
+        >
+          Next: Enrollment Experience →
+        </button>
+      </>
+    )}
+  </div>
+)}
 
             {step === 2 && (
               <div className="flex flex-col gap-6">

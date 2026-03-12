@@ -15,7 +15,7 @@ export function middleware(request: NextRequest) {
     request.method === "POST"
   ) {
     const ip =
-      request.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
+      request.headers.get("x-forwarded-for")?.split(",").trim() ??
       "unknown";
     const now = Date.now();
 
