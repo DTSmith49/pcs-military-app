@@ -1,8 +1,6 @@
 "use client";
 
 import { useState } from "react";
-  type SchoolMode = "existing" | "new";
-  const [schoolMode, setSchoolMode] = useState<SchoolMode>("new");
 import { useForm } from "react-hook-form";
 
 const US_STATES = [
@@ -145,6 +143,7 @@ function ProgressBar({ step }: { step: number }) {
 
 export default function ReviewPage() {
   const [step, setStep] = useState(1);
+  const [schoolMode, setSchoolMode] = useState<"existing" | "new">("new");
   const [submitted, setSubmitted] = useState(false);
   const [privacyOpen, setPrivacyOpen] = useState(false);
   // P-02: track submit-in-progress to show loading state and prevent double-submit
