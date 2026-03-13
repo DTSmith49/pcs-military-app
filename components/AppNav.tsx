@@ -18,7 +18,7 @@ export default function AppNav() {
           My Dashboard
         </a>
         <a href="/review" className="text-sm text-slate-300 hover:text-white transition-colors">
-          Write a Review
+          Log in / Write a Review
         </a>
       </div>
       <button
