@@ -26,22 +26,6 @@ export default function HomePage() {
   return (
     <div className="bg-[#F8F7F4]">
 
-      {/* Top Navbar */}
-      <nav className="w-full bg-[#1B2A4A] text-white px-6 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-6">
-          <span className="font-bold text-lg tracking-tight">🎖️ PCS Schools</span>
-          <Link href="/schools" className="text-sm text-slate-300 hover:text-white transition-colors">
-            Find Schools
-          </Link>
-        </div>
-        <Link
-          href="/review"
-          className="bg-[#E8A020] hover:bg-amber-500 text-[#1B2A4A] font-bold px-4 py-1.5 rounded-lg text-sm transition-colors"
-        >
-          Log in / Write a Review
-        </Link>
-      </nav>
-
       {/* Hero */}
       <section className="bg-[#1B2A4A] text-white">
         <div className="mx-auto max-w-6xl px-4 py-20 md:py-28 flex flex-col items-center text-center gap-6">
