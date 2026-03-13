@@ -51,6 +51,7 @@ function checkRateLimit(ip: string): boolean {
 }
 
 export async function proxy(request: NextRequest) {
+  if (request.nextUrl.pathname === "/review") return NextResponse.redirect(new URL("/login", request.url))
   const { pathname } = request.nextUrl
 
   if (pathname === '/api/reviews' && request.method === 'POST') {
