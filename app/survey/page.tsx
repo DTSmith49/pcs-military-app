@@ -1,6 +1,8 @@
 // app/survey/page.tsx
 "use client";
 
+export const dynamic = 'force-dynamic'
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { militarySchoolSurvey } from "../config/militarySchoolSurvey";
