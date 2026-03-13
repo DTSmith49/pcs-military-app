@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition, Suspense } from 'react'
+import { useState, useTransition, Suspense, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
@@ -13,6 +13,10 @@ function LoginForm() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+
+  useEffect(() => {
+    fetch('/api/auth/csrf')
+  }, [])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
