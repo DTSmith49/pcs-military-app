@@ -60,6 +60,9 @@ export default async function DashboardPage() {
           <div className="flex flex-col gap-4">
             {reviews.map((r) => {
               const school = Array.isArray(r.schools) ? r.schools[0] : r.schools
+              const submittedDate = r.created_at
+                ? new Date(r.created_at).toLocaleDateString()
+                : '—'
               return (
                 <div
                   key={r.id}
@@ -68,7 +71,7 @@ export default async function DashboardPage() {
                   <div>
                     <p className="font-semibold text-[#1B2A4A]">{school?.name ?? '—'}</p>
                     <p className="text-xs text-slate-500 mt-0.5">
-                      {school?.state ?? '—'} &middot; Submitted {new Date(r.created_at).toLocaleDateString()}
+                      {school?.state ?? '—'} &middot; Submitted {submittedDate}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
