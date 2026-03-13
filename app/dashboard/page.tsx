@@ -24,7 +24,7 @@ export default async function DashboardPage() {
   const supabase = await createClient()
   const { data: reviews } = await supabase
     .from('reviews')
-    .select('id, school_name, school_state, overall_fit, created_at')
+    .select('id, overall_fit, created_at, schools(name, state)')
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
 
@@ -58,25 +58,28 @@ export default async function DashboardPage() {
           </div>
         ) : (
           <div className="flex flex-col gap-4">
-            {reviews.map((r) => (
-              <div
-                key={r.id}
-                className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 flex items-center justify-between"
-              >
-                <div>
-                  <p className="font-semibold text-[#1B2A4A]">{r.school_name}</p>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    {r.school_state} &middot; Submitted {new Date(r.created_at).toLocaleDateString()}
-                  </p>
+            {reviews.map((r) => {
+              const school = Array.isArray(r.schools) ? r.schools[0] : r.schools
+              return (
+                <div
+                  key={r.id}
+                  className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 flex items-center justify-between"
+                >
+                  <div>
+                    <p className="font-semibold text-[#1B2A4A]">{school?.name ?? '—'}</p>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      {school?.state ?? '—'} &middot; Submitted {new Date(r.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold text-[#1B2A4A]">
+                      {r.overall_fit ? `${r.overall_fit}/5` : '—'}
+                    </span>
+                    <span className="text-xs text-slate-400">Overall Fit</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-bold text-[#1B2A4A]">
-                    {r.overall_fit ? `${r.overall_fit}/5` : '—'}
-                  </span>
-                  <span className="text-xs text-slate-400">Overall Fit</span>
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>
