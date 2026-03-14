@@ -22,11 +22,13 @@ export default async function DashboardPage() {
   }
 
   const supabase = await createClient()
-  const { data: reviews } = await supabase
+  const { data: reviews, error } = await supabase
     .from('reviews')
-    .select('id, overall_fit, created_at, schools(name, state)')
+    .select('id, overall_fit, created_at, schools(school_name, state_abbr)')
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
+
+  if (error) console.error('Dashboard fetch error', error)
 
   return (
     <div className="bg-[#F8F7F4] min-h-screen">
@@ -69,9 +71,9 @@ export default async function DashboardPage() {
                   className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 flex items-center justify-between"
                 >
                   <div>
-                    <p className="font-semibold text-[#1B2A4A]">{school?.name ?? '—'}</p>
+                    <p className="font-semibold text-[#1B2A4A]">{school?.school_name ?? '—'}</p>
                     <p className="text-xs text-slate-500 mt-0.5">
-                      {school?.state ?? '—'} &middot; Submitted {submittedDate}
+                      {school?.state_abbr ?? '—'} &middot; Submitted {submittedDate}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">

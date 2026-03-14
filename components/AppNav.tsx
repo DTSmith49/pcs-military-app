@@ -6,9 +6,10 @@ export default function AppNav() {
   const router = useRouter();
 
   async function handleLogout() {
-    await fetch("/api/auth/logout", { method: "POST" });
-    router.push("/login");
-  }
+  await fetch("/api/auth/logout", { method: "POST" });
+  router.refresh();
+  router.push("/login");
+}
 
   return (
     <nav className="w-full bg-[#1B2A4A] text-white px-6 py-3 flex items-center justify-between">

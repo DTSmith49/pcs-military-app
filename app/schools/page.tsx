@@ -3,7 +3,7 @@ import SchoolsListClient from "./SchoolsListClient";
 import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseUrl = "https://pnomrrkizuymcbopylxk.supabase.co";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 export default async function SchoolsListPage() {
@@ -11,8 +11,8 @@ export default async function SchoolsListPage() {
 
   const { data: schools } = await supabase
     .from("schools")
-    .select("id, name, city, state")
-    .order("name", { ascending: true });
+    .select("ncessch, school_name, city, state_abbr, rating_overall, is_dodea, enrollment")
+    .order("school_name", { ascending: true });
 
   return (
     <div className="bg-[#F8F7F4] min-h-screen">
@@ -20,10 +20,9 @@ export default async function SchoolsListPage() {
       {/* Page header */}
       <section className="bg-[#1B2A4A] text-white">
         <div className="mx-auto max-w-6xl px-4 py-12 flex flex-col gap-3">
-          <h1 className="text-3xl md:text-4xl font-bold">Schools reviewed by military families</h1>
+          <h1 className="text-3xl md:text-4xl font-bold">Find schools near your next duty station</h1>
           <p className="text-blue-200 text-sm max-w-xl">
-            Every school below has been reviewed by at least one military family during a PCS move.
-            Don&apos;t see your school? Be the first to add it.
+            Ratings calculated from federal NCES data. Reviews from military families who've been there.
           </p>
           <Link
             href="/review"
@@ -34,7 +33,7 @@ export default async function SchoolsListPage() {
         </div>
       </section>
 
-            {/* School list + search */}
+      {/* School list + search */}
       <SchoolsListClient initialSchools={schools ?? []} />
 
       {/* Bottom CTA */}

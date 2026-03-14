@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+import { cookies } from "next/headers";
+import { createClient } from "@/lib/supabase/server";
+import { verifyAccessToken } from "@/lib/auth/jwt";
+import { validateCsrf } from "@/lib/auth/csrf";
 
 type IncomingBody = {
   schoolName: string;
@@ -22,6 +20,26 @@ type IncomingBody = {
 };
 
 export async function POST(req: Request) {
+  // Auth check
+  const jar = await cookies();
+  const token = jar.get("access_token")?.value;
+  if (!token) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  let userId: string;
+  try {
+    const payload = await verifyAccessToken(token);
+    userId = payload.sub as string;
+  } catch {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // CSRF check
+  if (!(await validateCsrf(req))) {
+    return NextResponse.json({ error: "Invalid CSRF token" }, { status: 403 });
+  }
+
   try {
     const body = (await req.json()) as IncomingBody;
 
@@ -32,86 +50,75 @@ export async function POST(req: Request) {
       );
     }
 
-    // 1) Find or create school
     const nameTrimmed = body.schoolName.trim();
     const stateTrimmed = body.schoolState.trim().toUpperCase();
 
+    const supabase = await createClient();
+
+    // Find existing school by school_name + state_abbr
     const { data: existing, error: findError } = await supabase
       .from("schools")
-      .select("id")
-      .eq("name", nameTrimmed)
-      .eq("state", stateTrimmed)
+      .select("ncessch")
+      .eq("school_name", nameTrimmed)
+      .eq("state_abbr", stateTrimmed)
       .limit(1)
       .maybeSingle();
 
     if (findError) {
       console.error("Error looking up school", findError);
-      return NextResponse.json(
-        { error: "Failed to look up school" },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Failed to look up school" }, { status: 500 });
     }
 
-    let schoolId = existing?.id as string | undefined;
+    let schoolNcessch = existing?.ncessch as string | undefined;
 
-    if (!schoolId) {
+    if (!schoolNcessch) {
+      // Create new school record
       const { data: created, error: createError } = await supabase
         .from("schools")
         .insert({
-          name: nameTrimmed,
+          ncessch: `USER-${crypto.randomUUID()}`,
+          school_name: nameTrimmed,
           city: body.schoolCity?.trim() || null,
-          state: stateTrimmed,
+          state_abbr: stateTrimmed,
         })
-        .select("id")
+        .select("ncessch")
         .single();
 
       if (createError || !created) {
         console.error("Error creating school", createError);
-        return NextResponse.json(
-          { error: "Failed to create school" },
-          { status: 500 }
-        );
+        return NextResponse.json({ error: "Failed to create school" }, { status: 500 });
       }
 
-      schoolId = created.id;
+      schoolNcessch = created.ncessch;
     }
 
-    // 2) Insert review with school_id
-    const { error: reviewError } = await supabase.from("reviews").insert({
-      school_id: schoolId,
-      interstate_compact: body.interstateCompact ?? null,
-      purple_star: body.purpleStar ?? null,
-      iep504_status: body.iep504Status ?? null,
-      academic_experience: body.academicExperience
-        ? Number(body.academicExperience)
-        : null,
-      community_belonging: body.communityBelonging
-        ? Number(body.communityBelonging)
-        : null,
-      communication_engagement: body.communicationEngagement
-        ? Number(body.communicationEngagement)
-        : null,
-      special_needs_support: body.specialNeedsSupport
-        ? Number(body.specialNeedsSupport)
-        : null,
-      overall_fit: body.overallFit ? Number(body.overallFit) : null,
-      extra_notes: body.extraNotes ?? null,
-    });
-
+    // Insert review
+const { error: reviewError } = await supabase.from("reviews").insert({
+  school_id: schoolNcessch,
+  user_id: userId,
+  interstate_compact: body.interstateCompact ?? null,
+  purple_star: body.purpleStar ?? null,
+  iep504_status: body.iep504Status ?? null,
+  academic_experience: body.academicExperience ? 
+Number(body.academicExperience) : null,
+  community_belonging: body.communityBelonging ? 
+Number(body.communityBelonging) : null,
+  communication_engagement: body.communicationEngagement ? 
+Number(body.communicationEngagement) : null,
+  special_needs_support: body.specialNeedsSupport ? 
+Number(body.specialNeedsSupport) : null,
+  overall_fit: body.overallFit ? 
+Number(body.overallFit) : null,
+  extra_notes: body.extraNotes ?? null,
+});
     if (reviewError) {
       console.error("Supabase insert error", reviewError);
-      return NextResponse.json(
-        { error: "Failed to save review" },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Failed to save review" }, { status: 500 });
     }
 
     return NextResponse.json({ ok: true });
   } catch (e) {
     console.error("POST /api/reviews error", e);
-    return NextResponse.json(
-      { error: "Invalid request" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 }
