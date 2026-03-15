@@ -14,6 +14,7 @@ const US_STATES = [
 ];
 
 type ReviewFormValues = {
+  ncessch?: string;
   schoolName: string;
   schoolCity?: string;
   schoolState: string;
@@ -159,6 +160,7 @@ export default function ReviewPage() {
 
   const { handleSubmit, watch, setValue, control } = useForm<ReviewFormValues>({
     defaultValues: {
+      ncessch: "",
       schoolName: "",
       schoolCity: "",
       schoolState: "",
@@ -168,22 +170,23 @@ export default function ReviewPage() {
 
   const searchParams = useSearchParams();
 
-useEffect(() => {
-  const ncessch = searchParams.get("ncessch");
-  const name = searchParams.get("name");
-  const city = searchParams.get("city");
-  const state = searchParams.get("state");
+  useEffect(() => {
+    const ncessch = searchParams.get("ncessch");
+    const name = searchParams.get("name");
+    const city = searchParams.get("city");
+    const state = searchParams.get("state");
 
-  if (ncessch && name && state) {
-    setValue("schoolName", name);
-    setValue("schoolState", state);
-    setValue("schoolCity", city ?? "");
-    setSchoolQuery(`${name}${city ? ` — ${city},` : " —"} ${state}`);
-    setSchoolSelected(true);
-    setSchoolMode("existing");
-    setStep(2); // skip Step 1 entirely
-  }
-}, []);
+    if (ncessch && name && state) {
+      setValue("ncessch", ncessch);
+      setValue("schoolName", name);
+      setValue("schoolState", state);
+      setValue("schoolCity", city ?? "");
+      setSchoolQuery(`${name}${city ? ` — ${city},` : " —"} ${state}`);
+      setSchoolSelected(true);
+      setSchoolMode("existing");
+      setStep(2);
+    }
+  }, []);
 
   const [
     schoolName,
@@ -227,7 +230,8 @@ useEffect(() => {
     }, 300);
   }, [schoolQuery, schoolSelected]);
 
-  function handleExistingSchoolSelect(school: { name: string; state: string; city?: string }) {
+  function handleExistingSchoolSelect(school: { ncessch: string; name: string; state: string; city?: string }) {
+    setValue("ncessch", school.ncessch);
     setValue("schoolName", school.name, { shouldValidate: true });
     setValue("schoolState", school.state, { shouldValidate: true });
     setValue("schoolCity", school.city ?? "");
@@ -331,6 +335,15 @@ useEffect(() => {
           <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 md:p-8">
             <form onSubmit={handleSubmit(onSubmit)} noValidate>
 
+              {/* Hidden ncessch field — carries school ID through form submission */}
+              <Controller
+                name="ncessch"
+                control={control}
+                render={({ field }) => (
+                  <input type="hidden" {...field} value={field.value ?? ""} />
+                )}
+              />
+
               {step === 1 && (
                 <div className="flex flex-col gap-5">
                   <h2 className="text-lg font-bold text-[#1B2A4A]">School Information</h2>
@@ -372,6 +385,7 @@ useEffect(() => {
                           onChange={(e) => {
                             setSchoolQuery(e.target.value);
                             setSchoolSelected(false);
+                            setValue("ncessch", "");
                           }}
                           className="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B2A4A]"
                           placeholder="Start typing a school name…"
@@ -388,7 +402,7 @@ useEffect(() => {
                                   type="button"
                                   className="w-full text-left px-4 py-3 text-sm hover:bg-slate-50 border-b border-slate-100 last:border-0"
                                   onClick={() => {
-                                    handleExistingSchoolSelect({ name: s.school_name, state: s.state_abbr, city: s.city });
+                                    handleExistingSchoolSelect({ ncessch: s.ncessch, name: s.school_name, state: s.state_abbr, city: s.city });
                                     setSchoolQuery(`${s.school_name}${s.city ? ` — ${s.city},` : " —"} ${s.state_abbr}`);
                                     setSchoolSelected(true);
                                   }}

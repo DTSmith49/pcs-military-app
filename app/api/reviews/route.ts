@@ -5,6 +5,7 @@ import { verifyAccessToken } from "@/lib/auth/jwt";
 import { validateCsrf } from "@/lib/auth/csrf";
 
 type IncomingBody = {
+  ncessch?: string;
   schoolName: string;
   schoolCity?: string;
   schoolState: string;
@@ -55,62 +56,63 @@ export async function POST(req: Request) {
 
     const supabase = await createClient();
 
-    // Find existing school by school_name + state_abbr
-    const { data: existing, error: findError } = await supabase
-      .from("schools")
-      .select("ncessch")
-      .eq("school_name", nameTrimmed)
-      .eq("state_abbr", stateTrimmed)
-      .limit(1)
-      .maybeSingle();
-
-    if (findError) {
-      console.error("Error looking up school", findError);
-      return NextResponse.json({ error: "Failed to look up school" }, { status: 500 });
-    }
-
-    let schoolNcessch = existing?.ncessch as string | undefined;
+    // Short-circuit: use ncessch directly if provided (e.g. from school detail page)
+    let schoolNcessch = body.ncessch?.trim() || undefined;
 
     if (!schoolNcessch) {
-      // Create new school record
-      const { data: created, error: createError } = await supabase
+      // Fallback: find existing school by name + state
+      const { data: existing, error: findError } = await supabase
         .from("schools")
-        .insert({
-          ncessch: `USER-${crypto.randomUUID()}`,
-          school_name: nameTrimmed,
-          city: body.schoolCity?.trim() || null,
-          state_abbr: stateTrimmed,
-        })
         .select("ncessch")
-        .single();
+        .eq("school_name", nameTrimmed)
+        .eq("state_abbr", stateTrimmed)
+        .limit(1)
+        .maybeSingle();
 
-      if (createError || !created) {
-        console.error("Error creating school", createError);
-        return NextResponse.json({ error: "Failed to create school" }, { status: 500 });
+      if (findError) {
+        console.error("Error looking up school", findError);
+        return NextResponse.json({ error: "Failed to look up school" }, { status: 500 });
       }
 
-      schoolNcessch = created.ncessch;
+      schoolNcessch = existing?.ncessch as string | undefined;
+
+      if (!schoolNcessch) {
+        // Last resort: create a new user-submitted school record
+        const { data: created, error: createError } = await supabase
+          .from("schools")
+          .insert({
+            ncessch: `USER-${crypto.randomUUID()}`,
+            school_name: nameTrimmed,
+            city: body.schoolCity?.trim() || null,
+            state_abbr: stateTrimmed,
+          })
+          .select("ncessch")
+          .single();
+
+        if (createError || !created) {
+          console.error("Error creating school", createError);
+          return NextResponse.json({ error: "Failed to create school" }, { status: 500 });
+        }
+
+        schoolNcessch = created.ncessch;
+      }
     }
 
-    // Insert review
-const { error: reviewError } = await supabase.from("reviews").insert({
-  school_id: schoolNcessch,
-  user_id: userId,
-  interstate_compact: body.interstateCompact ?? null,
-  purple_star: body.purpleStar ?? null,
-  iep504_status: body.iep504Status ?? null,
-  academic_experience: body.academicExperience ? 
-Number(body.academicExperience) : null,
-  community_belonging: body.communityBelonging ? 
-Number(body.communityBelonging) : null,
-  communication_engagement: body.communicationEngagement ? 
-Number(body.communicationEngagement) : null,
-  special_needs_support: body.specialNeedsSupport ? 
-Number(body.specialNeedsSupport) : null,
-  overall_fit: body.overallFit ? 
-Number(body.overallFit) : null,
-  extra_notes: body.extraNotes ?? null,
-});
+    // Insert review linked to resolved school ID
+    const { error: reviewError } = await supabase.from("reviews").insert({
+      school_id: schoolNcessch,
+      user_id: userId,
+      interstate_compact: body.interstateCompact ?? null,
+      purple_star: body.purpleStar ?? null,
+      iep504_status: body.iep504Status ?? null,
+      academic_experience: body.academicExperience ? Number(body.academicExperience) : null,
+      community_belonging: body.communityBelonging ? Number(body.communityBelonging) : null,
+      communication_engagement: body.communicationEngagement ? Number(body.communicationEngagement) : null,
+      special_needs_support: body.specialNeedsSupport ? Number(body.specialNeedsSupport) : null,
+      overall_fit: body.overallFit ? Number(body.overallFit) : null,
+      extra_notes: body.extraNotes ?? null,
+    });
+
     if (reviewError) {
       console.error("Supabase insert error", reviewError);
       return NextResponse.json({ error: "Failed to save review" }, { status: 500 });
