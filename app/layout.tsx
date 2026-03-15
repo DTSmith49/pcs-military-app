@@ -37,6 +37,7 @@ export default function RootLayout({
             </Link>
             <nav aria-label="Main navigation" className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600">
               <Link href="/schools" className="hover:text-blue-600 transition-colors">Find Schools</Link>
+              <Link href="/sources" className="hover:text-blue-600 transition-colors">Sources</Link>
               <Link href="/review" className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-full transition-colors">Log in / Write a Review</Link>
             </nav>
             <div className="flex md:hidden items-center gap-3">
@@ -58,6 +59,7 @@ export default function RootLayout({
               <Link href="/" className="hover:text-white transition-colors">Home</Link>
               <Link href="/schools" className="hover:text-white transition-colors">Find Schools</Link>
               <Link href="/review" className="hover:text-white transition-colors">Write a Review</Link>
+              <Link href="/sources" className="hover:text-white transition-colors">Sources &amp; Attributions</Link>
             </div>
             <div>
               <div className="text-white font-semibold mb-3 text-sm uppercase tracking-wide">About</div>
