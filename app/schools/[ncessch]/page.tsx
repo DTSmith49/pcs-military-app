@@ -80,7 +80,7 @@ interface PageProps {
 
 const PER_PAGE = 10;
 
-// \u2500\u2500\u2500 SEO Metadata \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+// --- SEO Metadata ---
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { ncessch } = await params
   const supabase = await createClient()
@@ -192,17 +192,17 @@ export default async function SchoolProfilePage({ params, searchParams }: PagePr
       <section className="bg-[#1B2A4A] text-white">
         <div className="mx-auto max-w-4xl px-4 py-10">
           <Link href="/schools" className="text-blue-300 text-sm hover:text-white transition-colors">
-            \u2190 Back to schools
+            &larr; Back to schools
           </Link>
           <div className="mt-4 flex items-start justify-between gap-6 flex-wrap">
             <div>
               <div className="flex items-center gap-2 flex-wrap mb-1">
                 <span className="text-xs bg-white/10 px-2 py-0.5 rounded-full">{level}</span>
                 {school.is_dodea && (
-                  <span className="text-xs bg-amber-400/20 text-amber-300 px-2 py-0.5 rounded-full font-medium">\ud83c\udf96\ufe0f DoDEA</span>
+                  <span className="text-xs bg-amber-400/20 text-amber-300 px-2 py-0.5 rounded-full font-medium">🎖️ DoDEA</span>
                 )}
                 {school.purple_star_school && (
-                  <span className="text-xs bg-purple-400/20 text-purple-200 px-2 py-0.5 rounded-full font-medium">\u2b50 Purple Star</span>
+                  <span className="text-xs bg-purple-400/20 text-purple-200 px-2 py-0.5 rounded-full font-medium">⭐ Purple Star</span>
                 )}
                 {grades && (
                   <span className="text-xs bg-white/10 px-2 py-0.5 rounded-full">{grades}</span>
@@ -238,7 +238,7 @@ export default async function SchoolProfilePage({ params, searchParams }: PagePr
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
           <h2 className="text-lg font-bold text-[#1B2A4A] mb-4">Rating Breakdown</h2>
           {ratingDimensions.every((d) => school[d.key] === null || school[d.key] === undefined) ? (
-            <p className="text-slate-400 text-sm">No ratings calculated yet \u2014 be the first to review this school.</p>
+            <p className="text-slate-400 text-sm">No ratings calculated yet &mdash; be the first to review this school.</p>
           ) : (
             <div className="flex flex-col gap-3">
               {ratingDimensions.map((dim) => {
@@ -276,15 +276,15 @@ export default async function SchoolProfilePage({ params, searchParams }: PagePr
               href={writeReviewHref}
               className="bg-[#E8A020] hover:bg-amber-500 text-[#1B2A4A] font-bold px-4 py-2 rounded-lg text-sm transition-colors"
             >
-              \u270f\ufe0f Write a Review
+              ✏️ Write a Review
             </Link>
           </div>
 
           {safeReviews.length === 0 ? (
             <div className="flex flex-col items-center gap-3 py-6 text-center">
-              <span className="text-4xl">\ud83c\udfeb</span>
+              <span className="text-4xl">🏫</span>
               <p className="text-slate-500 text-sm max-w-sm">
-                No reviews yet \u2014 be the first military family to share your experience at this school.
+                No reviews yet &mdash; be the first military family to share your experience at this school.
               </p>
               <Link
                 href={writeReviewHref}
@@ -302,7 +302,7 @@ export default async function SchoolProfilePage({ params, searchParams }: PagePr
                       <div className="flex items-center gap-2 flex-wrap">
                         {r.overall_fit != null && (
                           <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${pillColor(Number(r.overall_fit))}`}>
-                            \u2b50 Military Fit: {r.overall_fit}/5
+                            ⭐ Military Fit: {r.overall_fit}/5
                           </span>
                         )}
                         {r.purple_star && r.purple_star !== "not_sure" && (
@@ -357,13 +357,13 @@ export default async function SchoolProfilePage({ params, searchParams }: PagePr
                 <div className="mt-6 flex items-center justify-center gap-3 border-t border-slate-100 pt-5">
                   {page > 1 && (
                     <Link href={`/schools/${ncessch}?page=${page - 1}`} className="px-4 py-2 rounded-lg border border-slate-300 text-sm font-medium hover:border-[#E8A020] transition-colors">
-                      \u2190 Prev
+                      &larr; Prev
                     </Link>
                   )}
                   <span className="text-sm text-slate-500">Page {page} of {totalPages}</span>
                   {page < totalPages && (
                     <Link href={`/schools/${ncessch}?page=${page + 1}`} className="px-4 py-2 rounded-lg border border-slate-300 text-sm font-medium hover:border-[#E8A020] transition-colors">
-                      Next \u2192
+                      Next &rarr;
                     </Link>
                   )}
                 </div>
