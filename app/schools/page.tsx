@@ -11,7 +11,7 @@ export default async function SchoolsListPage() {
 
   const { data: schools } = await supabase
     .from("schools")
-    .select("ncessch, school_name, city, state_abbr, rating_overall, is_dodea, enrollment")
+    .select("ncessch, school_name, city, state_abbr, rating_overall, is_dodea, enrollment, review_count")
     .order("school_name", { ascending: true });
 
   return (

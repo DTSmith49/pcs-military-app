@@ -11,6 +11,7 @@ interface School {
   rating_overall: number | null;
   is_dodea: boolean | null;
   enrollment: number | null;
+  review_count: number | null;
 }
 
 interface Props {
@@ -178,7 +179,14 @@ export default function SchoolsListClient({ initialSchools }: Props) {
                           <span className="text-xs text-slate-400">
                             {school.enrollment.toLocaleString()} students
                           </span>
-                        )}
+                    )}
+                    {school.review_count && school.review_count > 0 ? (
+                      <span className="text-xs text-amber-600 font-medium">
+                        ★ {school.review_count} {school.review_count === 1 ? "review" : "reviews"}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-slate-300">No reviews yet</span>
+                    )}
                       </div>
                     </div>
                   </div>
