@@ -196,11 +196,7 @@ export default function SchoolsListClient({ initialSchools }: Props) {
                       <div className={`w-10 h-10 rounded-full ring-2 ${badge.ring} ${badge.bg} flex items-center justify-center`}>
                         <span className={`text-sm font-black ${badge.text}`}>{badge.label}</span>
                       </div>
-                    ) : (
-                      <div className="w-10 h-10 rounded-full ring-2 ring-slate-200 bg-slate-100 flex items-center justify-center">
-                        <span className="text-xs text-slate-400">—</span>
-                      </div>
-                    )}
+                    ) : null}
                     <span className="text-xs text-slate-400 group-hover:text-[#E8A020] transition-colors">
                       View →
                     </span>
