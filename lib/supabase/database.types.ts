@@ -231,10 +231,12 @@ export type Database = {
           communication_engagement: number | null
           community_belonging: number | null
           created_at: string | null
+          edit_count: number
           extra_notes: string | null
           id: string
           iep504_status: string | null
           interstate_compact: string | null
+          last_edited_at: string | null
           overall_fit: number | null
           purple_star: string | null
           school_id: string | null
@@ -246,10 +248,12 @@ export type Database = {
           communication_engagement?: number | null
           community_belonging?: number | null
           created_at?: string | null
+          edit_count?: number
           extra_notes?: string | null
           id?: string
           iep504_status?: string | null
           interstate_compact?: string | null
+          last_edited_at?: string | null
           overall_fit?: number | null
           purple_star?: string | null
           school_id?: string | null
@@ -261,10 +265,12 @@ export type Database = {
           communication_engagement?: number | null
           community_belonging?: number | null
           created_at?: string | null
+          edit_count?: number
           extra_notes?: string | null
           id?: string
           iep504_status?: string | null
           interstate_compact?: string | null
+          last_edited_at?: string | null
           overall_fit?: number | null
           purple_star?: string | null
           school_id?: string | null
@@ -299,6 +305,7 @@ export type Database = {
           longitude: number | null
           ncessch: string
           pupil_teacher_ratio: number | null
+          purple_star_school: boolean | null
           rating_academic: number | null
           rating_calculated_at: string | null
           rating_diversity: number | null
@@ -333,6 +340,7 @@ export type Database = {
           longitude?: number | null
           ncessch: string
           pupil_teacher_ratio?: number | null
+          purple_star_school?: boolean | null
           rating_academic?: number | null
           rating_calculated_at?: string | null
           rating_diversity?: number | null
@@ -367,6 +375,7 @@ export type Database = {
           longitude?: number | null
           ncessch?: string
           pupil_teacher_ratio?: number | null
+          purple_star_school?: boolean | null
           rating_academic?: number | null
           rating_calculated_at?: string | null
           rating_diversity?: number | null
