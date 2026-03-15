@@ -90,16 +90,14 @@ export default async function SchoolProfilePage({ params }: PageProps) {
             </div>
 
             {/* Overall score */}
-            <div className={`w-20 h-20 rounded-2xl ring-4 ${overall.ring} ${overall.bg} flex flex-col items-center justify-center flex-shrink-0`}>
-              {school.rating_overall !== null ? (
-                <>
-                  <span className={`text-2xl font-black ${overall.text}`}>{Math.round(school.rating_overall)}</span>
-                  <span className={`text-xs ${overall.text}`}>/ 100</span>
-                </>
-              ) : (
-                <span className="text-slate-400 text-xs text-center px-1">No rating yet</span>
-              )}
+            {school.rating_overall !== null && (
+              <div className={`w-20 h-20 rounded-2xl ring-4 ${overall.ring} ${overall.bg} flex 
+            flex-col items-center justify-center flex-shrink-0`}>
+              <span className={`text-2xl font-black ${overall.text}`}>
+            {Math.round(school.rating_overall)}</span>
+              <span className={`text-xs ${overall.text}`}>/ 100</span>
             </div>
+            )}
           </div>
         </div>
       </section>
