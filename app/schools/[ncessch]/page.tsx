@@ -70,10 +70,11 @@ export default async function SchoolProfilePage({ params, searchParams }: PagePr
   const from = (page - 1) * PER_PAGE;
   const to = from + PER_PAGE - 1;
 
+  // NOTE: column is iep504_status (no underscore between iep and 504)
   const { data: reviews, count: reviewCount } = await supabase
     .from("reviews")
     .select(
-      "id, overall_fit, academic_experience, community_belonging, communication_engagement, special_needs_support, interstate_compact, purple_star, iep_504_status, extra_notes, created_at",
+      "id, overall_fit, academic_experience, community_belonging, communication_engagement, special_needs_support, interstate_compact, purple_star, iep504_status, extra_notes, created_at",
       { count: "exact" }
     )
     .eq("school_id", ncessch)
@@ -258,18 +259,28 @@ export default async function SchoolProfilePage({ params, searchParams }: PagePr
                           </span>
                         )}
                         {r.purple_star && r.purple_star !== "not_sure" && (
-                          <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${r.purple_star === "yes" ? "bg-purple-100 text-purple-700" : "bg-slate-100 text-slate-500"}`}>
+                          <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
+                            r.purple_star === "yes" ? "bg-purple-100 text-purple-700" : "bg-slate-100 text-slate-500"
+                          }`}>
                             Purple Star: {r.purple_star === "yes" ? "Yes ✓" : "No"}
                           </span>
                         )}
                         {r.interstate_compact && r.interstate_compact !== "not_sure" && (
-                          <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${r.interstate_compact === "yes" ? "bg-teal-100 text-teal-700" : "bg-slate-100 text-slate-500"}`}>
+                          <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
+                            r.interstate_compact === "yes" ? "bg-teal-100 text-teal-700" : "bg-slate-100 text-slate-500"
+                          }`}>
                             Interstate Compact: {formatCompact(r.interstate_compact)}
                           </span>
                         )}
-                        {r.iep_504_status && r.iep_504_status !== "not_applicable" && (
-                          <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${r.iep_504_status === "honored_promptly" ? "bg-emerald-100 text-emerald-700" : r.iep_504_status === "delayed" ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-600"}`}>
-                            IEP/504: {formatIep(r.iep_504_status)}
+                        {r.iep504_status && r.iep504_status !== "not_applicable" && (
+                          <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
+                            r.iep504_status === "honored_promptly"
+                              ? "bg-emerald-100 text-emerald-700"
+                              : r.iep504_status === "delayed"
+                              ? "bg-amber-100 text-amber-700"
+                              : "bg-red-100 text-red-600"
+                          }`}>
+                            IEP/504: {formatIep(r.iep504_status)}
                           </span>
                         )}
                       </div>
