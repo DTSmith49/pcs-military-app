@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import Link from "next/link";
+import NavClient from "@/components/NavClient"; // ADD THIS
+import Script from "next/script";
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -35,14 +37,9 @@ export default function RootLayout({
               <span className="text-blue-600 font-bold text-xl tracking-tight">PCS Parent</span>
               <span className="text-slate-800 font-semibold text-xl tracking-tight">SchoolGuide</span>
             </Link>
-            <nav aria-label="Main navigation" className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600">
-              <Link href="/schools" className="hover:text-blue-600 transition-colors">Find Schools</Link>
-              <Link href="/sources" className="hover:text-blue-600 transition-colors">Sources</Link>
-              <Link href="/review" className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-full transition-colors">Log in / Write a Review</Link>
-            </nav>
-            <div className="flex md:hidden items-center gap-3">
-              <Link href="/review" className="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1.5 rounded-full text-sm font-medium transition-colors">Log in / Review</Link>
-            </div>
+
+            {/* REPLACED static nav with auth-aware NavClient */}
+            <NavClient />
           </div>
         </header>
 
@@ -70,7 +67,18 @@ export default function RootLayout({
             © {new Date().getFullYear()} PCS Parent SchoolGuide. Built for military families.
           </div>
         </footer>
+       <Script id="microsoft-clarity" strategy="afterInteractive">
+          {`
+            (function(c,l,a,r,i,t,y){
+              c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+              t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+              y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+            })(window, document, "clarity", "script", "vwaly7b95c");
+          `}
+        </Script>
       </body>
     </html>
   );
 }
+
+
