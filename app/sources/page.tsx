@@ -15,12 +15,6 @@ const sources = [
         description:
           "Public school names, addresses, grade ranges, enrollment figures, and locale codes (urban/suburban/rural) used throughout the school directory.",
       },
-      {
-        name: "GreatSchools",
-        url: "https://www.greatschools.org",
-        description:
-          "Supplementary school summary ratings and student-body demographics referenced in school detail views.",
-      },
     ],
   },
   {
