@@ -158,13 +158,13 @@ export default function ReviewPage() {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { register, handleSubmit, watch, setValue } = useForm<ReviewFormValues>({
-  defaultValues: {
-    schoolName: "",
-    schoolCity: "",
-    schoolState: "",
-    extraNotes: "",
-  },
-});
+    defaultValues: {
+      schoolName: "",
+      schoolCity: "",
+      schoolState: "",
+      extraNotes: "",
+    },
+  });
 
   const [
     schoolName,
@@ -209,38 +209,38 @@ export default function ReviewPage() {
   }, [schoolQuery, schoolSelected]);
 
   function handleExistingSchoolSelect(school: { name: string; state: string; city?: string }) {
-  setValue("schoolName", school.name, { shouldValidate: true });
-  setValue("schoolState", school.state, { shouldValidate: true });
-  setValue("schoolCity", school.city ?? "");  // always set, even if empty
-}
+    setValue("schoolName", school.name, { shouldValidate: true });
+    setValue("schoolState", school.state, { shouldValidate: true });
+    setValue("schoolCity", school.city ?? "");
+  }
 
   const onSubmit = async (data: ReviewFormValues) => {
-  setIsSubmitting(true);
-  try {
-    const csrfRes = await fetch("/api/auth/csrf", { credentials: "include" });
-    const { token: csrfToken } = await csrfRes.json();
+    setIsSubmitting(true);
+    try {
+      const csrfRes = await fetch("/api/auth/csrf", { credentials: "include" });
+      const { token: csrfToken } = await csrfRes.json();
 
-    const res = await fetch("/api/reviews", {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-        "x-csrf-token": csrfToken,
-      },
-      body: JSON.stringify(data),
-    });
-    if (!res.ok) {
-      alert("There was a problem saving your review. Please try again.");
-      return;
+      const res = await fetch("/api/reviews", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          "x-csrf-token": csrfToken,
+        },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        alert("There was a problem saving your review. Please try again.");
+        return;
+      }
+      setSubmitted(true);
+    } catch (e) {
+      console.error(e);
+      alert("There was a network error. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
-    setSubmitted(true);
-  } catch (e) {
-    console.error(e);
-    alert("There was a network error. Please try again.");
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+  };
 
   if (submitted) {
     return (
@@ -351,7 +351,7 @@ export default function ReviewPage() {
                         <input
                           id="existingSchool"
                           type="text"
-                          value={schoolQuery}
+                          value={schoolQuery ?? ""}
                           onChange={(e) => {
                             setSchoolQuery(e.target.value);
                             setSchoolSelected(false);
@@ -429,7 +429,6 @@ export default function ReviewPage() {
                           id="schoolCity"
                           type="text"
                           {...register("schoolCity")}
-                          defaultValue=""
                           className="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B2A4A]"
                           placeholder="e.g., Rockville"
                         />
