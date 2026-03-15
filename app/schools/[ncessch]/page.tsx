@@ -178,8 +178,10 @@ export default async function SchoolProfilePage({ params }: PageProps) {
               )}
             </h2>
             <Link
-              href="/review"
-              className="bg-[#E8A020] hover:bg-amber-500 text-[#1B2A4A] font-bold px-4 py-2 rounded-lg text-sm transition-colors"
+              href={`/review?
+            ncessch=${school.ncessch}&name=${encodeURIComponent(school.school_name)}&city=${encodeURIComponent(school.city ?? "")}&state=${school.state_abbr}`}
+              className="bg-[#E8A020] hover:bg-amber-500 text-[#1B2A4A] font-bold px-4 py-2 
+            rounded-lg text-sm transition-colors"
             >
               Write a Review
             </Link>

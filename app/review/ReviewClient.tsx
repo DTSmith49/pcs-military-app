@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic'
 
 import { useState, useEffect, useRef } from "react";
 import { useForm, Controller } from "react-hook-form";
+import { useSearchParams } from "next/navigation";
 
 const US_STATES = [
   "AL","AK","AZ","AR","CA","CO","CT","DE","DC","FL","GA","HI","ID","IL","IN",
@@ -164,6 +165,25 @@ export default function ReviewPage() {
       extraNotes: "",
     },
   });
+
+  const searchParams = useSearchParams();
+
+useEffect(() => {
+  const ncessch = searchParams.get("ncessch");
+  const name = searchParams.get("name");
+  const city = searchParams.get("city");
+  const state = searchParams.get("state");
+
+  if (ncessch && name && state) {
+    setValue("schoolName", name);
+    setValue("schoolState", state);
+    setValue("schoolCity", city ?? "");
+    setSchoolQuery(`${name}${city ? ` — ${city},` : " —"} ${state}`);
+    setSchoolSelected(true);
+    setSchoolMode("existing");
+    setStep(2); // skip Step 1 entirely
+  }
+}, []);
 
   const [
     schoolName,
