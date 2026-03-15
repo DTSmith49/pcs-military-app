@@ -1,28 +1,103 @@
-// app/schools/page.tsx
-import SchoolsListClient from "./SchoolsListClient";
-import Link from "next/link";
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from '@/lib/supabase/server'
+import SchoolsListClient from './SchoolsListClient'
+import AppNav from '@/components/AppNav'
+import Link from 'next/link'
 
-const supabaseUrl = "https://pnomrrkizuymcbopylxk.supabase.co";
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+export const dynamic = 'force-dynamic'
 
-export default async function SchoolsListPage() {
-  const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const PAGE_SIZE = 20
 
-  const { data: schools } = await supabase
-    .from("schools")
-    .select("ncessch, school_name, city, state_abbr, rating_overall, is_dodea, enrollment, review_count")
-    .order("school_name", { ascending: true });
+interface SearchParams {
+  q?: string
+  state?: string
+  sort?: string
+  dodea?: string
+  purple_star?: string
+  has_reviews?: string
+  page?: string
+}
+
+export default async function SchoolsListPage({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>
+}) {
+  const sp = await searchParams
+  const supabase = await createClient()
+
+  const q = sp.q?.trim() ?? ''
+  const stateFilter = sp.state?.toUpperCase() ?? ''
+  const sort = sp.sort ?? 'name'
+  const dodeaOnly = sp.dodea === '1'
+  const purpleStarOnly = sp.purple_star === '1'
+  const hasReviewsOnly = sp.has_reviews === '1'
+  const page = Math.max(1, parseInt(sp.page ?? '1', 10))
+
+  // Build query
+  let query = supabase
+    .from('schools')
+    .select(
+      'ncessch, school_name, city, state_abbr, rating_overall, rating_military_friendly, is_dodea, enrollment, review_count, purple_star_school',
+      { count: 'exact' }
+    )
+
+  if (q) {
+    query = query.or(
+      `school_name.ilike.%${q}%,city.ilike.%${q}%,state_abbr.ilike.%${q}%`
+    )
+  }
+  if (stateFilter) query = query.eq('state_abbr', stateFilter)
+  if (dodeaOnly) query = query.eq('is_dodea', true)
+  if (purpleStarOnly) query = query.eq('purple_star_school', true)
+  if (hasReviewsOnly) query = query.gt('review_count', 0)
+
+  // Sort
+  switch (sort) {
+    case 'rating':
+      query = query.order('rating_overall', { ascending: false, nullsFirst: false })
+      break
+    case 'military':
+      query = query.order('rating_military_friendly', { ascending: false, nullsFirst: false })
+      break
+    case 'reviews':
+      query = query.order('review_count', { ascending: false, nullsFirst: false })
+      break
+    default:
+      query = query.order('school_name', { ascending: true })
+  }
+
+  // Paginate
+  const from = (page - 1) * PAGE_SIZE
+  query = query.range(from, from + PAGE_SIZE - 1)
+
+  const { data: schools, count, error } = await query
+  if (error) console.error('Schools list error', error)
+
+  const totalCount = count ?? 0
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE)
+
+  // Get distinct states for filter dropdown
+  const { data: stateRows } = await supabase
+    .from('schools')
+    .select('state_abbr')
+    .order('state_abbr')
+
+  const states: string[] = Array.from(
+    new Set((stateRows ?? []).map((r) => r.state_abbr).filter(Boolean))
+  ).sort()
 
   return (
     <div className="bg-[#F8F7F4] min-h-screen">
+      <AppNav />
 
       {/* Page header */}
       <section className="bg-[#1B2A4A] text-white">
         <div className="mx-auto max-w-6xl px-4 py-12 flex flex-col gap-3">
-          <h1 className="text-3xl md:text-4xl font-bold">Find schools near your next duty station</h1>
+          <h1 className="text-3xl md:text-4xl font-bold">
+            Find schools near your next duty station
+          </h1>
           <p className="text-blue-200 text-sm max-w-xl">
-            Ratings calculated from federal NCES data. Reviews from military families who've been there.
+            Ratings calculated from federal NCES data. Reviews from military families who&apos;ve been there.
           </p>
           <Link
             href="/review"
@@ -34,7 +109,21 @@ export default async function SchoolsListPage() {
       </section>
 
       {/* School list + search */}
-      <SchoolsListClient initialSchools={schools ?? []} />
+      <SchoolsListClient
+        schools={schools ?? []}
+        totalCount={totalCount}
+        totalPages={totalPages}
+        states={states}
+        initialParams={{
+          q,
+          state: stateFilter,
+          sort,
+          dodea: dodeaOnly,
+          purple_star: purpleStarOnly,
+          has_reviews: hasReviewsOnly,
+          page,
+        }}
+      />
 
       {/* Bottom CTA */}
       <section className="mx-auto max-w-6xl px-4 pb-16">
@@ -53,7 +142,6 @@ export default async function SchoolsListPage() {
           </Link>
         </div>
       </section>
-
     </div>
-  );
+  )
 }
