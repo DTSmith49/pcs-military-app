@@ -56,13 +56,22 @@ export async function PATCH(
 
   const supabase = await createClient()
 
-  // Fetch the existing review to verify ownership and check edit window
+  // Cast to any to avoid generated-type errors until the DB migration
+  // adds edit_count + last_edited_at to the reviews table.
   const { data: existing, error: fetchError } = await supabase
     .from('reviews')
     .select('id, user_id, created_at, edit_count')
     .eq('id', id)
     .eq('user_id', userId)
-    .single()
+    .single() as unknown as {
+      data: {
+        id: string
+        user_id: string
+        created_at: string
+        edit_count: number | null
+      } | null
+      error: unknown
+    }
 
   if (fetchError || !existing) {
     return NextResponse.json({ error: 'Review not found' }, { status: 404 })
@@ -150,7 +159,7 @@ export async function PATCH(
 
   const { error: updateError } = await supabase
     .from('reviews')
-    .update(updates)
+    .update(updates as Record<string, unknown>)
     .eq('id', id)
     .eq('user_id', userId)
 
