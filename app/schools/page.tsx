@@ -17,6 +17,20 @@ interface SearchParams {
   page?: string
 }
 
+// Mirror of School interface in SchoolsListClient — cast target until types are regenerated
+interface School {
+  ncessch: string
+  school_name: string
+  city: string | null
+  state_abbr: string
+  rating_overall: number | null
+  rating_military_friendly: number | null
+  is_dodea: boolean | null
+  enrollment: number | null
+  review_count: number | null
+  purple_star_school: boolean | null
+}
+
 export default async function SchoolsListPage({
   searchParams,
 }: {
@@ -70,8 +84,11 @@ export default async function SchoolsListPage({
   const from = (page - 1) * PAGE_SIZE
   query = query.range(from, from + PAGE_SIZE - 1)
 
-  const { data: schools, count, error } = await query
+  const { data: rawSchools, count, error } = await query
   if (error) console.error('Schools list error', error)
+
+  // Cast to local School type until generated Supabase types include all columns
+  const schools = (rawSchools ?? []) as unknown as School[]
 
   const totalCount = count ?? 0
   const totalPages = Math.ceil(totalCount / PAGE_SIZE)
@@ -110,7 +127,7 @@ export default async function SchoolsListPage({
 
       {/* School list + search */}
       <SchoolsListClient
-        schools={schools ?? []}
+        schools={schools}
         totalCount={totalCount}
         totalPages={totalPages}
         states={states}
