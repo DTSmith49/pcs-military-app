@@ -4,6 +4,7 @@ import { verifyAccessToken } from '@/lib/auth/jwt'
 import { createClient } from '@/lib/supabase/server'
 import AppNav from '@/components/AppNav'
 import Link from 'next/link'
+import DeleteReviewButton from '@/components/DeleteReviewButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -61,10 +62,10 @@ export default async function DashboardPage() {
         ) : (
           <div className="flex flex-col gap-4">
             {reviews.map((r) => {
-              const school = Array.isArray(r.schools) ? r.schools[0] : r.schools
+              const school = Array.isArray(r.schools) ? r.schools[0] : r.schools;
               const submittedDate = r.created_at
                 ? new Date(r.created_at).toLocaleDateString()
-                : '—'
+                : '—';
               return (
                 <div
                   key={r.id}
@@ -76,14 +77,17 @@ export default async function DashboardPage() {
                       {school?.state_abbr ?? '—'} &middot; Submitted {submittedDate}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold text-[#1B2A4A]">
-                      {r.overall_fit ? `${r.overall_fit}/5` : '—'}
-                    </span>
-                    <span className="text-xs text-slate-400">Overall Fit</span>
+                  <div className="flex items-center gap-3">
+                    <div className="text-right">
+                      <span className="text-sm font-bold text-[#1B2A4A]">
+                        {r.overall_fit ? `${r.overall_fit}/5` : '—'}
+                      </span>
+                      <p className="text-xs text-slate-400">Overall Fit</p>
+                    </div>
+                    <DeleteReviewButton reviewId={r.id} />
                   </div>
                 </div>
-              )
+              );
             })}
           </div>
         )}
