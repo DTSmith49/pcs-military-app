@@ -21,7 +21,7 @@ function gradeRange(low: string | null, high: string | null) {
   if (!low && !high) return null;
   const fmt = (g: string) => g === "PK" ? "Pre-K" : g === "KG" ? "K" : g;
   if (low === high) return `Grade ${fmt(low!)}`;
-  return `Grades ${fmt(low!)}–${fmt(high!)}`;
+  return `Grades ${fmt(low!)}\u2013${fmt(high!)}`;
 }
 
 function schoolLevelLabel(level: string | null) {
@@ -31,16 +31,16 @@ function schoolLevelLabel(level: string | null) {
 
 function formatCompact(val: string | null) {
   if (!val) return null;
-  const map: Record<string, string> = { yes: "Yes ✓", no: "No ✗", not_sure: "Not sure" };
+  const map: Record<string, string> = { yes: "Yes \u2713", no: "No \u2717", not_sure: "Not sure" };
   return map[val] ?? val;
 }
 
 function formatIep(val: string | null) {
   if (!val) return null;
   const map: Record<string, string> = {
-    honored_promptly: "Honored promptly ✓",
+    honored_promptly: "Honored promptly \u2713",
     delayed: "Delayed",
-    not_honored: "Not honored ✗",
+    not_honored: "Not honored \u2717",
     not_applicable: "N/A",
   };
   return map[val] ?? val;
@@ -58,9 +58,6 @@ type SchoolRow = {
   state_abbr: string
   street_address: string | null
   zip: string | null
-  enrollment: number | null
-  pupil_teacher_ratio: number | null
-  frl_ratio: number | null
   grade_low: string | null
   grade_high: string | null
   school_level: string | null
@@ -73,9 +70,6 @@ type SchoolRow = {
   rating_grade_span: number | null
   rating_size: number | null
   rating_diversity: number | null
-  academic_proficiency_math: number | null
-  academic_proficiency_reading: number | null
-  composite_score: number | null
   [key: string]: unknown
 }
 
@@ -86,7 +80,7 @@ interface PageProps {
 
 const PER_PAGE = 10;
 
-// ─── SEO Metadata ────────────────────────────────────────────────────────────
+// \u2500\u2500\u2500 SEO Metadata \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { ncessch } = await params
   const supabase = await createClient()
@@ -98,23 +92,20 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     .single()
 
   if (!data) {
-    return {
-      title: 'School Not Found | PCS Schools',
-    }
+    return { title: 'School Not Found | PCS Schools' }
   }
 
   const location = [data.city, data.state_abbr].filter(Boolean).join(', ')
-  const rating = data.rating_overall != null ? ` · Score: ${Math.round(data.rating_overall as number)}/100` : ''
+  const rating = data.rating_overall != null ? ` \u00b7 Score: ${Math.round(data.rating_overall as number)}/100` : ''
   const reviews = (data.review_count as number | null) ?? 0
-  const reviewText = reviews > 0 ? ` · ${reviews} military family review${reviews !== 1 ? 's' : ''}` : ''
+  const reviewText = reviews > 0 ? ` \u00b7 ${reviews} military family review${reviews !== 1 ? 's' : ''}` : ''
   const badges = [
     (data.is_dodea as boolean | null) ? 'DoDEA' : null,
     (data.purple_star_school as boolean | null) ? 'Purple Star' : null,
   ].filter(Boolean).join(', ')
 
-  const title = `${data.school_name as string} — ${location} | PCS Schools`
+  const title = `${data.school_name as string} \u2014 ${location} | PCS Schools`
   const description = `Military family reviews for ${data.school_name as string} in ${location}.${rating}${reviewText}${badges ? ` Designations: ${badges}.` : ''} See how this school supports PCS transitions, IEP continuity, and military family life.`
-
   const ogImage = `https://pcs-military-app.vercel.app/api/og?name=${encodeURIComponent(data.school_name as string)}&location=${encodeURIComponent(location)}&score=${data.rating_overall ?? ''}&reviews=${reviews}`
 
   return {
@@ -146,7 +137,7 @@ export default async function SchoolProfilePage({ params, searchParams }: PagePr
 
   const { data: rawSchool } = await supabase
     .from("schools")
-    .select("*")
+    .select("ncessch, school_name, city, state_abbr, street_address, zip, grade_low, grade_high, school_level, is_dodea, purple_star_school, rating_overall, rating_academic, rating_military_friendly, rating_student_teacher, rating_grade_span, rating_size, rating_diversity")
     .eq("ncessch", ncessch)
     .single();
 
@@ -201,17 +192,17 @@ export default async function SchoolProfilePage({ params, searchParams }: PagePr
       <section className="bg-[#1B2A4A] text-white">
         <div className="mx-auto max-w-4xl px-4 py-10">
           <Link href="/schools" className="text-blue-300 text-sm hover:text-white transition-colors">
-            ← Back to schools
+            \u2190 Back to schools
           </Link>
           <div className="mt-4 flex items-start justify-between gap-6 flex-wrap">
             <div>
               <div className="flex items-center gap-2 flex-wrap mb-1">
                 <span className="text-xs bg-white/10 px-2 py-0.5 rounded-full">{level}</span>
                 {school.is_dodea && (
-                  <span className="text-xs bg-amber-400/20 text-amber-300 px-2 py-0.5 rounded-full font-medium">🎖️ DoDEA</span>
+                  <span className="text-xs bg-amber-400/20 text-amber-300 px-2 py-0.5 rounded-full font-medium">\ud83c\udf96\ufe0f DoDEA</span>
                 )}
                 {school.purple_star_school && (
-                  <span className="text-xs bg-purple-400/20 text-purple-200 px-2 py-0.5 rounded-full font-medium">⭐ Purple Star</span>
+                  <span className="text-xs bg-purple-400/20 text-purple-200 px-2 py-0.5 rounded-full font-medium">\u2b50 Purple Star</span>
                 )}
                 {grades && (
                   <span className="text-xs bg-white/10 px-2 py-0.5 rounded-full">{grades}</span>
@@ -223,7 +214,6 @@ export default async function SchoolProfilePage({ params, searchParams }: PagePr
                 {school.city}, {school.state_abbr} {school.zip}
               </p>
             </div>
-
             {school.rating_overall !== null && (
               <div className={`w-20 h-20 rounded-2xl ring-4 ${overall.ring} ${overall.bg} flex flex-col items-center justify-center flex-shrink-0`}>
                 <span className={`text-2xl font-black ${overall.text}`}>{Math.round(school.rating_overall)}</span>
@@ -236,26 +226,19 @@ export default async function SchoolProfilePage({ params, searchParams }: PagePr
 
       <div className="mx-auto max-w-4xl px-4 py-10 flex flex-col gap-8">
 
-        {/* Quick stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[
-            { label: "Enrollment", value: school.enrollment ? school.enrollment.toLocaleString() : "—" },
-            { label: "Pupil-Teacher Ratio", value: school.pupil_teacher_ratio ? `${school.pupil_teacher_ratio}:1` : "—" },
-            { label: "Free/Reduced Lunch", value: school.frl_ratio ? `${Math.round(school.frl_ratio * 100)}%` : "—" },
-            { label: "Reviews", value: totalReviews },
-          ].map((stat) => (
-            <div key={stat.label} className="bg-white rounded-xl border border-slate-100 shadow-sm p-4 text-center">
-              <div className="text-2xl font-black text-[#1B2A4A]">{stat.value}</div>
-              <div className="text-xs text-slate-400 mt-1">{stat.label}</div>
-            </div>
-          ))}
+        {/* Reviews count stat */}
+        <div className="max-w-xs">
+          <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-4 text-center">
+            <div className="text-2xl font-black text-[#1B2A4A]">{totalReviews}</div>
+            <div className="text-xs text-slate-400 mt-1">Military Family Reviews</div>
+          </div>
         </div>
 
         {/* Rating breakdown */}
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
           <h2 className="text-lg font-bold text-[#1B2A4A] mb-4">Rating Breakdown</h2>
           {ratingDimensions.every((d) => school[d.key] === null || school[d.key] === undefined) ? (
-            <p className="text-slate-400 text-sm">No ratings calculated yet — be the first to review this school.</p>
+            <p className="text-slate-400 text-sm">No ratings calculated yet \u2014 be the first to review this school.</p>
           ) : (
             <div className="flex flex-col gap-3">
               {ratingDimensions.map((dim) => {
@@ -271,7 +254,7 @@ export default async function SchoolProfilePage({ params, searchParams }: PagePr
                       />
                     </div>
                     <div className={`text-xs font-bold w-8 text-right ${color.text}`}>
-                      {score != null ? Math.round(score) : "—"}
+                      {score != null ? Math.round(score) : "\u2014"}
                     </div>
                   </div>
                 );
@@ -279,26 +262,6 @@ export default async function SchoolProfilePage({ params, searchParams }: PagePr
             </div>
           )}
         </div>
-
-        {/* Academic proficiency */}
-        {(school.academic_proficiency_math !== null || school.academic_proficiency_reading !== null) && (
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-            <h2 className="text-lg font-bold text-[#1B2A4A] mb-4">Academic Proficiency</h2>
-            <div className="grid grid-cols-2 gap-4">
-              {[
-                { label: "Math", value: school.academic_proficiency_math },
-                { label: "Reading", value: school.academic_proficiency_reading },
-              ].map((item) => (
-                <div key={item.label} className="text-center p-4 bg-slate-50 rounded-xl">
-                  <div className="text-2xl font-black text-[#1B2A4A]">
-                    {item.value !== null && item.value !== undefined ? `${Math.round((item.value as number) * 100)}%` : "—"}
-                  </div>
-                  <div className="text-xs text-slate-400 mt-1">{item.label} Proficiency</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* Reviews */}
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
@@ -313,15 +276,15 @@ export default async function SchoolProfilePage({ params, searchParams }: PagePr
               href={writeReviewHref}
               className="bg-[#E8A020] hover:bg-amber-500 text-[#1B2A4A] font-bold px-4 py-2 rounded-lg text-sm transition-colors"
             >
-              ✏️ Write a Review
+              \u270f\ufe0f Write a Review
             </Link>
           </div>
 
           {safeReviews.length === 0 ? (
             <div className="flex flex-col items-center gap-3 py-6 text-center">
-              <span className="text-4xl">🏫</span>
+              <span className="text-4xl">\ud83c\udfeb</span>
               <p className="text-slate-500 text-sm max-w-sm">
-                No reviews yet — be the first military family to share your experience at this school.
+                No reviews yet \u2014 be the first military family to share your experience at this school.
               </p>
               <Link
                 href={writeReviewHref}
@@ -339,14 +302,14 @@ export default async function SchoolProfilePage({ params, searchParams }: PagePr
                       <div className="flex items-center gap-2 flex-wrap">
                         {r.overall_fit != null && (
                           <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${pillColor(Number(r.overall_fit))}`}>
-                            ⭐ Military Fit: {r.overall_fit}/5
+                            \u2b50 Military Fit: {r.overall_fit}/5
                           </span>
                         )}
                         {r.purple_star && r.purple_star !== "not_sure" && (
                           <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
                             r.purple_star === "yes" ? "bg-purple-100 text-purple-700" : "bg-slate-100 text-slate-500"
                           }`}>
-                            Purple Star: {r.purple_star === "yes" ? "Yes ✓" : "No"}
+                            Purple Star: {r.purple_star === "yes" ? "Yes \u2713" : "No"}
                           </span>
                         )}
                         {r.interstate_compact && r.interstate_compact !== "not_sure" && (
@@ -394,13 +357,13 @@ export default async function SchoolProfilePage({ params, searchParams }: PagePr
                 <div className="mt-6 flex items-center justify-center gap-3 border-t border-slate-100 pt-5">
                   {page > 1 && (
                     <Link href={`/schools/${ncessch}?page=${page - 1}`} className="px-4 py-2 rounded-lg border border-slate-300 text-sm font-medium hover:border-[#E8A020] transition-colors">
-                      ← Prev
+                      \u2190 Prev
                     </Link>
                   )}
                   <span className="text-sm text-slate-500">Page {page} of {totalPages}</span>
                   {page < totalPages && (
                     <Link href={`/schools/${ncessch}?page=${page + 1}`} className="px-4 py-2 rounded-lg border border-slate-300 text-sm font-medium hover:border-[#E8A020] transition-colors">
-                      Next →
+                      Next \u2192
                     </Link>
                   )}
                 </div>
