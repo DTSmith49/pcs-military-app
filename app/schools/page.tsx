@@ -83,7 +83,7 @@ export default async function SchoolsListPage({
     .order('state_abbr')
 
   const states: string[] = Array.from(
-    new Set((stateRows ?? []).map((r) => r.state_abbr).filter(Boolean))
+    new Set((stateRows ?? []).map((r) => r.state_abbr).filter((s): s is string => s !== null))
   ).sort()
 
   return (
