@@ -4,7 +4,6 @@ export const dynamic = 'force-dynamic'
 
 import { useState, useEffect, useRef } from "react";
 import { useForm, Controller } from "react-hook-form";
-import AppNav from "@/components/AppNav";
 
 const US_STATES = [
   "AL","AK","AZ","AR","CA","CO","CT","DE","DC","FL","GA","HI","ID","IL","IN",
@@ -245,7 +244,6 @@ export default function ReviewPage() {
   if (submitted) {
     return (
       <div className="bg-[#F8F7F4] min-h-screen">
-        <AppNav />
         <div className="flex items-center justify-center px-4 py-20">
           <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-10 max-w-md w-full text-center flex flex-col gap-4">
             <span role="img" aria-label="Military medal" className="text-5xl">🎖️</span>
@@ -277,7 +275,6 @@ export default function ReviewPage() {
 
   return (
     <div className="bg-[#F8F7F4] min-h-screen">
-      <AppNav />
       <div className="py-10 px-4">
         <div className="mx-auto max-w-2xl">
           <div className="mb-6">
