@@ -3,7 +3,7 @@
 export const dynamic = 'force-dynamic'
 
 import { useState, useEffect, useRef } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import AppNav from "@/components/AppNav";
 
 const US_STATES = [
@@ -157,7 +157,7 @@ export default function ReviewPage() {
   const [schoolSelected, setSchoolSelected] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const { register, handleSubmit, watch, setValue } = useForm<ReviewFormValues>({
+  const { handleSubmit, watch, setValue, control } = useForm<ReviewFormValues>({
     defaultValues: {
       schoolName: "",
       schoolCity: "",
@@ -351,7 +351,7 @@ export default function ReviewPage() {
                         <input
                           id="existingSchool"
                           type="text"
-                          value={schoolQuery ?? ""}
+                          value={schoolQuery}
                           onChange={(e) => {
                             setSchoolQuery(e.target.value);
                             setSchoolSelected(false);
@@ -412,25 +412,40 @@ export default function ReviewPage() {
                           School name <span className="text-red-500" aria-hidden="true">*</span>
                           <span className="sr-only">(required)</span>
                         </label>
-                        <input
-                          id="schoolName"
-                          type="text"
-                          {...register("schoolName", { required: true })}
-                          className="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B2A4A]"
-                          placeholder="e.g., Smith Elementary School"
-                          aria-required="true"
+                        <Controller
+                          name="schoolName"
+                          control={control}
+                          rules={{ required: true }}
+                          render={({ field }) => (
+                            <input
+                              id="schoolName"
+                              type="text"
+                              {...field}
+                              value={field.value ?? ""}
+                              className="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B2A4A]"
+                              placeholder="e.g., Smith Elementary School"
+                              aria-required="true"
+                            />
+                          )}
                         />
                       </div>
                       <div className="flex flex-col gap-1">
                         <label htmlFor="schoolCity" className="text-sm font-medium text-slate-700">
                           City (optional)
                         </label>
-                        <input
-                          id="schoolCity"
-                          type="text"
-                          {...register("schoolCity")}
-                          className="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B2A4A]"
-                          placeholder="e.g., Rockville"
+                        <Controller
+                          name="schoolCity"
+                          control={control}
+                          render={({ field }) => (
+                            <input
+                              id="schoolCity"
+                              type="text"
+                              {...field}
+                              value={field.value ?? ""}
+                              className="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B2A4A]"
+                              placeholder="e.g., Rockville"
+                            />
+                          )}
                         />
                       </div>
                       <div className="flex flex-col gap-1">
@@ -438,17 +453,25 @@ export default function ReviewPage() {
                           State <span className="text-red-500" aria-hidden="true">*</span>
                           <span className="sr-only">(required)</span>
                         </label>
-                        <select
-                          id="schoolState"
-                          {...register("schoolState", { required: true })}
-                          className="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B2A4A] bg-white"
-                          aria-required="true"
-                        >
-                          <option value="">Select a state...</option>
-                          {US_STATES.map((s) => (
-                            <option key={s} value={s}>{s}</option>
-                          ))}
-                        </select>
+                        <Controller
+                          name="schoolState"
+                          control={control}
+                          rules={{ required: true }}
+                          render={({ field }) => (
+                            <select
+                              id="schoolState"
+                              {...field}
+                              value={field.value ?? ""}
+                              className="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B2A4A] bg-white"
+                              aria-required="true"
+                            >
+                              <option value="">Select a state...</option>
+                              {US_STATES.map((s) => (
+                                <option key={s} value={s}>{s}</option>
+                              ))}
+                            </select>
+                          )}
+                        />
                       </div>
                       <button
                         type="button"
@@ -572,12 +595,19 @@ export default function ReviewPage() {
                     <p className="text-xs text-slate-500 mb-1">
                       Optional. Please avoid names of children or staff, or detailed medical information.
                     </p>
-                    <textarea
-                      id="extraNotes"
-                      {...register("extraNotes")}
-                      rows={5}
-                      className="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B2A4A]"
-                      placeholder="Share what went well, what was hard, or what you wish you had known before enrolling..."
+                    <Controller
+                      name="extraNotes"
+                      control={control}
+                      render={({ field }) => (
+                        <textarea
+                          id="extraNotes"
+                          {...field}
+                          value={field.value ?? ""}
+                          rows={5}
+                          className="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B2A4A]"
+                          placeholder="Share what went well, what was hard, or what you wish you had known before enrolling..."
+                        />
+                      )}
                     />
                   </div>
                   <div className="flex flex-col gap-1 mt-2">
