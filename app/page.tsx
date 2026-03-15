@@ -1,6 +1,7 @@
 // app/page.tsx
 import Link from "next/link";
 import HeroSearch from "@/components/HeroSearch";
+import BaseLookup from "@/components/BaseLookup";
 import {
   BookOpen,
   PenLine,
@@ -47,22 +48,17 @@ export default function HomePage() {
           <div className="inline-block bg-[#E8A020] text-[#1B2A4A] text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-2">
             Built by military families
           </div>
-
           <h1
             className="font-bold leading-tight max-w-3xl"
             style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)" }}
           >
-            Find Schools that{" "}
-            Understand Military Life
+            Find Schools that Understand Military Life
           </h1>
-
           <p className="text-lg md:text-xl text-blue-200 max-w-2xl leading-relaxed">
             Peer reviews from military families who have made the same PCS moves.
             Real ratings. Real experiences. No guessing.
           </p>
-
           <HeroSearch />
-
           <Link
             href="/review"
             className="border border-white text-white hover:bg-white hover:text-[#1B2A4A] px-6 py-2.5 rounded-lg text-sm font-medium transition-colors"
@@ -85,31 +81,48 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Duty station lookup */}
+      <section aria-labelledby="duty-station-heading" className="mx-auto max-w-6xl px-4 py-16">
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-8 md:p-10">
+          <div className="mb-6">
+            <h2 id="duty-station-heading" className="text-2xl font-bold text-[#1B2A4A] mb-1">
+              Search by duty station
+            </h2>
+            <p className="text-slate-500 text-sm">
+              Type your next base or installation — we&apos;ll show schools within 30 miles.
+            </p>
+          </div>
+          <BaseLookup />
+        </div>
+      </section>
+
       {/* How it works */}
-      <section aria-labelledby="how-it-works-heading" className="mx-auto max-w-6xl px-4 py-16">
-        <h2 id="how-it-works-heading" className="text-2xl md:text-3xl font-bold text-[#1B2A4A] text-center mb-10">
-          How it works
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {steps.map((s) => (
-            <div
-              key={s.step}
-              className="bg-white rounded-xl p-6 shadow-sm border border-slate-100 flex flex-col items-center text-center gap-3"
-            >
-              <span aria-label={s.iconLabel} className="text-[#1B2A4A]">{s.icon}</span>
-              <div className="w-7 h-7 rounded-full bg-[#E8A020] text-[#1B2A4A] text-xs font-bold flex items-center justify-center" aria-hidden="true">
-                {s.step}
+      <section aria-labelledby="how-it-works-heading" className="bg-white border-t border-b border-slate-200">
+        <div className="mx-auto max-w-6xl px-4 py-16">
+          <h2 id="how-it-works-heading" className="text-2xl md:text-3xl font-bold text-[#1B2A4A] text-center mb-10">
+            How it works
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {steps.map((s) => (
+              <div
+                key={s.step}
+                className="bg-[#F8F7F4] rounded-xl p-6 shadow-sm border border-slate-100 flex flex-col items-center text-center gap-3"
+              >
+                <span aria-label={s.iconLabel} className="text-[#1B2A4A]">{s.icon}</span>
+                <div className="w-7 h-7 rounded-full bg-[#E8A020] text-[#1B2A4A] text-xs font-bold flex items-center justify-center" aria-hidden="true">
+                  {s.step}
+                </div>
+                <div className="font-semibold text-[#1B2A4A]">{s.title}</div>
+                <p className="text-sm text-slate-500">{s.desc}</p>
               </div>
-              <div className="font-semibold text-[#1B2A4A]">{s.title}</div>
-              <p className="text-sm text-slate-500">{s.desc}</p>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </section>
 
       {/* Rating dimensions */}
-      <section aria-labelledby="what-families-rate-heading" className="bg-white border-t border-b border-slate-200">
-        <div className="mx-auto max-w-6xl px-4 py-16">
+      <section aria-labelledby="what-families-rate-heading" className="mx-auto max-w-6xl px-4 py-16">
+        <div>
           <h2 id="what-families-rate-heading" className="text-2xl md:text-3xl font-bold text-[#1B2A4A] text-center mb-2">
             What military families rate
           </h2>
@@ -120,7 +133,7 @@ export default function HomePage() {
             {dimensions.map((d) => (
               <div
                 key={d.name}
-                className="rounded-xl border border-slate-200 p-5 flex gap-4 items-start bg-[#F8F7F4] hover:border-[#E8A020] transition-colors"
+                className="rounded-xl border border-slate-200 p-5 flex gap-4 items-start bg-white hover:border-[#E8A020] transition-colors"
                 style={{ borderLeft: `4px solid ${d.accent}` }}
               >
                 <span aria-label={d.iconLabel} className="mt-0.5 flex-shrink-0" style={{ color: d.accent }}>
@@ -137,30 +150,32 @@ export default function HomePage() {
       </section>
 
       {/* Community launch CTA */}
-      <section aria-labelledby="community-heading" className="mx-auto max-w-6xl px-4 py-16">
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-10 md:p-14 flex flex-col items-center text-center gap-5">
-          <span role="img" aria-label="Waving hand" className="text-5xl">👋</span>
-          <h2 id="community-heading" className="text-2xl md:text-3xl font-bold text-[#1B2A4A] max-w-xl">
-            Every great community starts with one voice.
-          </h2>
-          <p className="text-slate-500 text-sm max-w-lg leading-relaxed">
-            We&apos;re just getting started — and that means your review carries more weight
-            than it ever will again. If you&apos;ve PCS&apos;d recently, your experience is exactly
-            what the next military family needs to find a school that truly supports their kids.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 mt-2">
-            <Link
-              href="/review"
-              className="bg-[#E8A020] hover:bg-amber-500 text-[#1B2A4A] font-bold px-8 py-4 rounded-lg text-sm transition-colors"
-            >
-              Write a Review
-            </Link>
-            <Link
-              href="/schools"
-              className="border border-[#1B2A4A] text-[#1B2A4A] hover:bg-[#1B2A4A] hover:text-white font-semibold px-8 py-4 rounded-lg text-sm transition-colors"
-            >
-              Find Schools
-            </Link>
+      <section aria-labelledby="community-heading" className="bg-white border-t border-slate-200">
+        <div className="mx-auto max-w-6xl px-4 py-16">
+          <div className="bg-[#F8F7F4] rounded-2xl border border-slate-100 shadow-sm p-10 md:p-14 flex flex-col items-center text-center gap-5">
+            <span role="img" aria-label="Waving hand" className="text-5xl">👋</span>
+            <h2 id="community-heading" className="text-2xl md:text-3xl font-bold text-[#1B2A4A] max-w-xl">
+              Every great community starts with one voice.
+            </h2>
+            <p className="text-slate-500 text-sm max-w-lg leading-relaxed">
+              We&apos;re just getting started — and that means your review carries more weight
+              than it ever will again. If you&apos;ve PCS&apos;d recently, your experience is exactly
+              what the next military family needs to find a school that truly supports their kids.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 mt-2">
+              <Link
+                href="/review"
+                className="bg-[#E8A020] hover:bg-amber-500 text-[#1B2A4A] font-bold px-8 py-4 rounded-lg text-sm transition-colors"
+              >
+                Write a Review
+              </Link>
+              <Link
+                href="/schools"
+                className="border border-[#1B2A4A] text-[#1B2A4A] hover:bg-[#1B2A4A] hover:text-white font-semibold px-8 py-4 rounded-lg text-sm transition-colors"
+              >
+                Find Schools
+              </Link>
+            </div>
           </div>
         </div>
       </section>
