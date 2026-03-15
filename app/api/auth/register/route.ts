@@ -1,7 +1,6 @@
 /**
  * POST /api/auth/register
  * AUTH-01: Create a new account with email + password.
- * Sends an email-verification link via Supabase Auth.
  */
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
@@ -9,6 +8,7 @@ import { createClient } from '@/lib/supabase/server'
 import { hashPassword, validatePasswordStrength } from '@/lib/auth/password'
 import { checkRateLimit, getRateLimitHeaders } from '@/lib/auth/rateLimit'
 import { validateCsrf } from '@/lib/auth/csrf'
+import { sendWelcomeEmail } from '@/lib/email/sendWelcomeEmail'
 
 const RegisterSchema = z.object({
   email: z.string().email(),
@@ -53,7 +53,6 @@ export async function POST(request: Request) {
     .single()
 
   if (existing) {
-    // Return generic message to prevent email enumeration
     return NextResponse.json(
       { message: 'If that email is not registered, you will receive a verification link.' },
       { status: 200 },
@@ -73,8 +72,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Registration failed. Please try again.' }, { status: 500 })
   }
 
-  // TODO (EMAIL-TMPL): send verification email
-  // await sendVerificationEmail(user.email, user.id)
+  // Send welcome email — fire and forget, never blocks registration
+  void sendWelcomeEmail(user.email)
 
   return NextResponse.json(
     { message: 'Account created. Please check your email to verify your address.' },

@@ -1,4 +1,5 @@
 // app/schools/[ncessch]/page.tsx
+import type { Metadata } from 'next'
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
@@ -50,8 +51,6 @@ function formatDate(val: string | null): string {
   return new Date(val).toLocaleDateString("en-US", { year: "numeric", month: "short" });
 }
 
-// Local type that includes columns not yet in generated Supabase types.
-// TODO: remove cast once `npx supabase gen types` is re-run after migration.
 type SchoolRow = {
   ncessch: string
   school_name: string
@@ -87,6 +86,57 @@ interface PageProps {
 
 const PER_PAGE = 10;
 
+// ─── SEO Metadata ────────────────────────────────────────────────────────────
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { ncessch } = await params
+  const supabase = await createClient()
+
+  const { data } = await supabase
+    .from('schools')
+    .select('school_name, city, state_abbr, rating_overall, review_count, is_dodea, purple_star_school')
+    .eq('ncessch', ncessch)
+    .single()
+
+  if (!data) {
+    return {
+      title: 'School Not Found | PCS Schools',
+    }
+  }
+
+  const location = [data.city, data.state_abbr].filter(Boolean).join(', ')
+  const rating = data.rating_overall != null ? ` · Score: ${Math.round(data.rating_overall as number)}/100` : ''
+  const reviews = (data.review_count as number | null) ?? 0
+  const reviewText = reviews > 0 ? ` · ${reviews} military family review${reviews !== 1 ? 's' : ''}` : ''
+  const badges = [
+    (data.is_dodea as boolean | null) ? 'DoDEA' : null,
+    (data.purple_star_school as boolean | null) ? 'Purple Star' : null,
+  ].filter(Boolean).join(', ')
+
+  const title = `${data.school_name as string} — ${location} | PCS Schools`
+  const description = `Military family reviews for ${data.school_name as string} in ${location}.${rating}${reviewText}${badges ? ` Designations: ${badges}.` : ''} See how this school supports PCS transitions, IEP continuity, and military family life.`
+
+  const ogImage = `https://pcs-military-app.vercel.app/api/og?name=${encodeURIComponent(data.school_name as string)}&location=${encodeURIComponent(location)}&score=${data.rating_overall ?? ''}&reviews=${reviews}`
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url: `https://pcs-military-app.vercel.app/schools/${ncessch}`,
+      siteName: 'PCS Schools',
+      images: [{ url: ogImage, width: 1200, height: 630, alt: title }],
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [ogImage],
+    },
+  }
+}
+
 export default async function SchoolProfilePage({ params, searchParams }: PageProps) {
   const { ncessch } = await params;
   const { page: pageParam } = await searchParams;
@@ -102,7 +152,6 @@ export default async function SchoolProfilePage({ params, searchParams }: PagePr
 
   if (!rawSchool) notFound();
 
-  // Cast to local type until generated types include all columns
   const school = rawSchool as unknown as SchoolRow;
 
   const from = (page - 1) * PER_PAGE;
@@ -286,8 +335,6 @@ export default async function SchoolProfilePage({ params, searchParams }: PagePr
               <div className="flex flex-col divide-y divide-slate-100">
                 {safeReviews.map((r) => (
                   <div key={r.id} className="py-5 first:pt-0 last:pb-0 flex flex-col gap-3">
-
-                    {/* Top row: overall fit + date */}
                     <div className="flex items-center justify-between gap-2 flex-wrap">
                       <div className="flex items-center gap-2 flex-wrap">
                         {r.overall_fit != null && (
@@ -321,12 +368,9 @@ export default async function SchoolProfilePage({ params, searchParams }: PagePr
                           </span>
                         )}
                       </div>
-                      <span className="text-xs text-slate-400">
-                        {formatDate(r.created_at)}
-                      </span>
+                      <span className="text-xs text-slate-400">{formatDate(r.created_at)}</span>
                     </div>
 
-                    {/* Dimension score pills */}
                     <div className="flex gap-2 flex-wrap">
                       {reviewDimensions.map((d) => {
                         const val = r[d.key as keyof typeof r];
@@ -339,7 +383,6 @@ export default async function SchoolProfilePage({ params, searchParams }: PagePr
                       })}
                     </div>
 
-                    {/* Free-text notes */}
                     {r.extra_notes && (
                       <p className="text-sm text-slate-600 leading-relaxed">{r.extra_notes}</p>
                     )}
@@ -347,23 +390,16 @@ export default async function SchoolProfilePage({ params, searchParams }: PagePr
                 ))}
               </div>
 
-              {/* Pagination */}
               {totalPages > 1 && (
                 <div className="mt-6 flex items-center justify-center gap-3 border-t border-slate-100 pt-5">
                   {page > 1 && (
-                    <Link
-                      href={`/schools/${ncessch}?page=${page - 1}`}
-                      className="px-4 py-2 rounded-lg border border-slate-300 text-sm font-medium hover:border-[#E8A020] transition-colors"
-                    >
+                    <Link href={`/schools/${ncessch}?page=${page - 1}`} className="px-4 py-2 rounded-lg border border-slate-300 text-sm font-medium hover:border-[#E8A020] transition-colors">
                       ← Prev
                     </Link>
                   )}
                   <span className="text-sm text-slate-500">Page {page} of {totalPages}</span>
                   {page < totalPages && (
-                    <Link
-                      href={`/schools/${ncessch}?page=${page + 1}`}
-                      className="px-4 py-2 rounded-lg border border-slate-300 text-sm font-medium hover:border-[#E8A020] transition-colors"
-                    >
+                    <Link href={`/schools/${ncessch}?page=${page + 1}`} className="px-4 py-2 rounded-lg border border-slate-300 text-sm font-medium hover:border-[#E8A020] transition-colors">
                       Next →
                     </Link>
                   )}
@@ -379,10 +415,7 @@ export default async function SchoolProfilePage({ params, searchParams }: PagePr
           <p className="text-blue-200 text-sm max-w-md">
             Your review takes about 5 minutes and could save another military family weeks of uncertainty during their PCS move.
           </p>
-          <Link
-            href={writeReviewHref}
-            className="bg-[#E8A020] hover:bg-amber-500 text-[#1B2A4A] font-bold px-8 py-3 rounded-lg text-sm transition-colors"
-          >
+          <Link href={writeReviewHref} className="bg-[#E8A020] hover:bg-amber-500 text-[#1B2A4A] font-bold px-8 py-3 rounded-lg text-sm transition-colors">
             Write a Review
           </Link>
         </div>
