@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic'
 import { useState, useEffect, useRef } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 
 const US_STATES = [
   "AL","AK","AZ","AR","CA","CO","CT","DE","DC","FL","GA","HI","ID","IL","IN",
@@ -49,11 +50,7 @@ function RatingPills({
 }) {
   return (
     <div className="flex flex-col gap-1">
-      <div
-        role="radiogroup"
-        aria-label={groupLabel}
-        className="flex gap-2 flex-wrap"
-      >
+      <div role="radiogroup" aria-label={groupLabel} className="flex gap-2 flex-wrap">
         {RATINGS.map((r) => (
           <button
             key={r}
@@ -91,11 +88,7 @@ function YesNoPills({
   groupLabel: string;
 }) {
   return (
-    <div
-      role="radiogroup"
-      aria-label={groupLabel}
-      className="flex gap-2 flex-wrap"
-    >
+    <div role="radiogroup" aria-label={groupLabel} className="flex gap-2 flex-wrap">
       {options.map((o) => (
         <button
           key={o.value}
@@ -124,9 +117,7 @@ function ProgressBar({ step }: { step: number }) {
           <div className="flex flex-col items-center gap-1 flex-1">
             <div
               className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
-                step >= s.number
-                  ? "bg-[#1B2A4A] text-white"
-                  : "bg-slate-200 text-slate-400"
+                step >= s.number ? "bg-[#1B2A4A] text-white" : "bg-slate-200 text-slate-400"
               }`}
               aria-current={step === s.number ? "step" : undefined}
             >
@@ -145,12 +136,31 @@ function ProgressBar({ step }: { step: number }) {
   );
 }
 
-export default function ReviewPage() {
+// Inline error/warning banner
+function InlineBanner({ type, message }: { type: "error" | "warn"; message: string }) {
+  const styles = type === "error"
+    ? "bg-red-50 border border-red-200 text-red-700"
+    : "bg-amber-50 border border-amber-200 text-amber-700";
+  return (
+    <div role="alert" className={`rounded-lg px-4 py-3 text-sm flex items-start gap-2 ${styles}`}>
+      <span aria-hidden="true">{type === "error" ? "⚠️" : "ℹ️"}</span>
+      <span>{message}</span>
+    </div>
+  );
+}
+
+export default function ReviewClient() {
   const [step, setStep] = useState(1);
   const [schoolMode, setSchoolMode] = useState<"existing" | "new">("new");
   const [submitted, setSubmitted] = useState(false);
   const [privacyOpen, setPrivacyOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [step1Error, setStep1Error] = useState<string | null>(null);
+
+  // Auth state
+  const [authChecked, setAuthChecked] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const [schoolQuery, setSchoolQuery] = useState("");
   const [schoolResults, setSchoolResults] = useState<{ ncessch: string; school_name: string; city?: string; state_abbr: string }[]>([]);
@@ -170,6 +180,16 @@ export default function ReviewPage() {
 
   const searchParams = useSearchParams();
 
+  // Check auth on mount
+  useEffect(() => {
+    fetch("/api/auth/me", { credentials: "include" })
+      .then((r) => r.json())
+      .then((d) => setIsLoggedIn(d?.loggedIn === true))
+      .catch(() => setIsLoggedIn(false))
+      .finally(() => setAuthChecked(true));
+  }, []);
+
+  // Pre-fill from URL params
   useEffect(() => {
     const ncessch = searchParams.get("ncessch");
     const name = searchParams.get("name");
@@ -189,7 +209,9 @@ export default function ReviewPage() {
   }, []);
 
   const [
+    ncessch,
     schoolName,
+    schoolCity,
     schoolState,
     interstateCompact,
     purpleStar,
@@ -200,7 +222,9 @@ export default function ReviewPage() {
     specialNeedsSupport,
     overallFit,
   ] = watch([
+    "ncessch",
     "schoolName",
+    "schoolCity",
     "schoolState",
     "interstateCompact",
     "purpleStar",
@@ -211,6 +235,11 @@ export default function ReviewPage() {
     "specialNeedsSupport",
     "overallFit",
   ]);
+
+  // School recap label shown on Step 4
+  const schoolRecap = schoolName
+    ? [schoolName, schoolCity, schoolState].filter(Boolean).join(", ")
+    : null;
 
   useEffect(() => {
     if (schoolSelected) return;
@@ -238,6 +267,7 @@ export default function ReviewPage() {
   }
 
   const onSubmit = async (data: ReviewFormValues) => {
+    setSubmitError(null);
     setIsSubmitting(true);
     try {
       const csrfRes = await fetch("/api/auth/csrf", { credentials: "include" });
@@ -252,20 +282,27 @@ export default function ReviewPage() {
         },
         body: JSON.stringify(data),
       });
+
+      if (res.status === 401) {
+        setSubmitError("You need to be logged in to submit a review. Your answers are still here — log in and come back.");
+        return;
+      }
       if (!res.ok) {
-        alert("There was a problem saving your review. Please try again.");
+        const body = await res.json().catch(() => ({}));
+        setSubmitError(body?.error ?? "Something went wrong saving your review. Please try again.");
         return;
       }
       setSubmitted(true);
-    } catch (e) {
-      console.error(e);
-      alert("There was a network error. Please try again.");
+    } catch {
+      setSubmitError("A network error occurred. Please check your connection and try again.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // Success screen
   if (submitted) {
+    const schoolHref = ncessch ? `/schools/${ncessch}` : null;
     return (
       <div className="bg-[#F8F7F4] min-h-screen">
         <div className="flex items-center justify-center px-4 py-20">
@@ -277,16 +314,24 @@ export default function ReviewPage() {
               during one of the most stressful parts of a PCS move.
             </p>
             <div className="flex flex-col gap-2 mt-2">
-              <a
+              {schoolHref && (
+                <Link
+                  href={schoolHref}
+                  className="w-full bg-[#E8A020] hover:bg-amber-500 text-[#1B2A4A] font-bold py-3 rounded-lg transition-colors text-sm text-center"
+                >
+                  View School Page →
+                </Link>
+              )}
+              <Link
                 href="/dashboard"
-                className="w-full bg-[#1B2A4A] hover:bg-[#243860] text-white font-semibold py-3 rounded-lg transition-colors text-sm"
+                className="w-full bg-[#1B2A4A] hover:bg-[#243860] text-white font-semibold py-3 rounded-lg transition-colors text-sm text-center"
               >
                 View My Dashboard
-              </a>
+              </Link>
               <button
                 type="button"
-                onClick={() => { setSubmitted(false); setStep(1); }}
-                className="text-sm text-[#1B2A4A] underline"
+                onClick={() => { setSubmitted(false); setStep(1); setSubmitError(null); }}
+                className="text-sm text-slate-500 underline mt-1"
               >
                 Submit another review
               </button>
@@ -301,11 +346,25 @@ export default function ReviewPage() {
     <div className="bg-[#F8F7F4] min-h-screen">
       <div className="py-10 px-4">
         <div className="mx-auto max-w-2xl">
+
           <div className="mb-6">
             <h1 className="text-3xl font-bold text-[#1B2A4A]">Write a School Review</h1>
             <p className="text-slate-500 text-sm mt-1">
               Help military families find schools that truly support their kids.
             </p>
+
+            {/* Auth nudge — only show once auth check is done and user is logged out */}
+            {authChecked && !isLoggedIn && (
+              <div className="mt-4 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-800 flex items-start gap-2">
+                <span aria-hidden="true">🔒</span>
+                <span>
+                  You&apos;re not logged in. You can fill out the form now, but you&apos;ll need to{" "}
+                  <Link href="/login" className="underline font-semibold hover:text-amber-900">log in</Link>{" "}
+                  before submitting.
+                </span>
+              </div>
+            )}
+
             <button
               type="button"
               aria-expanded={privacyOpen}
@@ -335,7 +394,6 @@ export default function ReviewPage() {
           <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 md:p-8">
             <form onSubmit={handleSubmit(onSubmit)} noValidate>
 
-              {/* Hidden ncessch field — carries school ID through form submission */}
               <Controller
                 name="ncessch"
                 control={control}
@@ -344,13 +402,17 @@ export default function ReviewPage() {
                 )}
               />
 
+              {/* ── STEP 1: School Info ── */}
               {step === 1 && (
                 <div className="flex flex-col gap-5">
                   <h2 className="text-lg font-bold text-[#1B2A4A]">School Information</h2>
+
+                  {step1Error && <InlineBanner type="error" message={step1Error} />}
+
                   <div className="flex gap-2 text-sm">
                     <button
                       type="button"
-                      onClick={() => setSchoolMode("existing")}
+                      onClick={() => { setSchoolMode("existing"); setStep1Error(null); }}
                       className={`flex-1 rounded-lg border px-3 py-2 font-medium ${
                         schoolMode === "existing"
                           ? "bg-[#1B2A4A] text-white border-[#1B2A4A]"
@@ -361,7 +423,7 @@ export default function ReviewPage() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => setSchoolMode("new")}
+                      onClick={() => { setSchoolMode("new"); setStep1Error(null); }}
                       className={`flex-1 rounded-lg border px-3 py-2 font-medium ${
                         schoolMode === "new"
                           ? "bg-[#1B2A4A] text-white border-[#1B2A4A]"
@@ -386,6 +448,7 @@ export default function ReviewPage() {
                             setSchoolQuery(e.target.value);
                             setSchoolSelected(false);
                             setValue("ncessch", "");
+                            setStep1Error(null);
                           }}
                           className="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B2A4A]"
                           placeholder="Start typing a school name…"
@@ -405,6 +468,7 @@ export default function ReviewPage() {
                                     handleExistingSchoolSelect({ ncessch: s.ncessch, name: s.school_name, state: s.state_abbr, city: s.city });
                                     setSchoolQuery(`${s.school_name}${s.city ? ` — ${s.city},` : " —"} ${s.state_abbr}`);
                                     setSchoolSelected(true);
+                                    setStep1Error(null);
                                   }}
                                 >
                                   <span className="font-medium text-[#1B2A4A]">{s.school_name}</span>
@@ -426,9 +490,10 @@ export default function ReviewPage() {
                         type="button"
                         onClick={() => {
                           if (!schoolName || !schoolState) {
-                            alert("Please select a school from the list.");
+                            setStep1Error("Please select a school from the list before continuing.");
                             return;
                           }
+                          setStep1Error(null);
                           setStep(2);
                         }}
                         className="mt-2 w-full bg-[#1B2A4A] hover:bg-[#243860] text-white font-semibold py-3 rounded-lg transition-colors"
@@ -453,6 +518,7 @@ export default function ReviewPage() {
                               type="text"
                               {...field}
                               value={field.value ?? ""}
+                              onChange={(e) => { field.onChange(e); setStep1Error(null); }}
                               className="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B2A4A]"
                               placeholder="e.g., Smith Elementary School"
                               aria-required="true"
@@ -493,6 +559,7 @@ export default function ReviewPage() {
                               id="schoolState"
                               {...field}
                               value={field.value ?? ""}
+                              onChange={(e) => { field.onChange(e); setStep1Error(null); }}
                               className="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B2A4A] bg-white"
                               aria-required="true"
                             >
@@ -508,9 +575,10 @@ export default function ReviewPage() {
                         type="button"
                         onClick={() => {
                           if (!schoolName || !schoolState) {
-                            alert("Please enter a school name and state.");
+                            setStep1Error("Please enter a school name and select a state before continuing.");
                             return;
                           }
+                          setStep1Error(null);
                           setStep(2);
                         }}
                         className="mt-2 w-full bg-[#1B2A4A] hover:bg-[#243860] text-white font-semibold py-3 rounded-lg transition-colors"
@@ -522,11 +590,12 @@ export default function ReviewPage() {
                 </div>
               )}
 
+              {/* ── STEP 2: Enrollment ── */}
               {step === 2 && (
                 <div className="flex flex-col gap-6">
                   <h2 className="text-lg font-bold text-[#1B2A4A]">Enrollment &amp; Transition Experience</h2>
                   <div className="flex flex-col gap-2">
-                    <p id="compact-label" className="text-sm font-medium text-slate-700">
+                    <p className="text-sm font-medium text-slate-700">
                       Did the school demonstrate familiarity with the Interstate Compact?
                     </p>
                     <p className="text-xs text-slate-500">Covers enrollment, class placement, credit transfer, and activity eligibility after your PCS.</p>
@@ -542,7 +611,7 @@ export default function ReviewPage() {
                     />
                   </div>
                   <div className="flex flex-col gap-2">
-                    <p id="purple-star-label" className="text-sm font-medium text-slate-700">
+                    <p className="text-sm font-medium text-slate-700">
                       Is this a Purple Star designated school?
                     </p>
                     <p className="text-xs text-slate-500">Purple Star schools have committed staff training and support for military-connected students.</p>
@@ -558,7 +627,7 @@ export default function ReviewPage() {
                     />
                   </div>
                   <div className="flex flex-col gap-2">
-                    <p id="iep-label" className="text-sm font-medium text-slate-700">
+                    <p className="text-sm font-medium text-slate-700">
                       If your child has an IEP or 504 plan, was it honored after your PCS?
                     </p>
                     <p className="text-xs text-slate-500">Skip if not applicable to your family.</p>
@@ -581,6 +650,7 @@ export default function ReviewPage() {
                 </div>
               )}
 
+              {/* ── STEP 3: Ratings ── */}
               {step === 3 && (
                 <div className="flex flex-col gap-6">
                   <h2 className="text-lg font-bold text-[#1B2A4A]">Rate Your Experience</h2>
@@ -616,9 +686,31 @@ export default function ReviewPage() {
                 </div>
               )}
 
+              {/* ── STEP 4: Comments & Submit ── */}
               {step === 4 && (
                 <div className="flex flex-col gap-5">
                   <h2 className="text-lg font-bold text-[#1B2A4A]">Comments &amp; Submit</h2>
+
+                  {/* School recap chip */}
+                  {schoolRecap && (
+                    <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5">
+                      <span className="text-slate-400 text-sm" aria-hidden="true">🏫</span>
+                      <span className="text-sm text-slate-600">
+                        Reviewing: <span className="font-semibold text-[#1B2A4A]">{schoolRecap}</span>
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Auth warning on step 4 if still not logged in */}
+                  {authChecked && !isLoggedIn && (
+                    <InlineBanner
+                      type="warn"
+                      message="You're not logged in. Please log in before submitting so your review isn't lost."
+                    />
+                  )}
+
+                  {submitError && <InlineBanner type="error" message={submitError} />}
+
                   <div className="flex flex-col gap-1">
                     <label htmlFor="extraNotes" className="text-sm font-medium text-slate-700">
                       Anything else military families should know?
@@ -641,6 +733,7 @@ export default function ReviewPage() {
                       )}
                     />
                   </div>
+
                   <div className="flex flex-col gap-1 mt-2">
                     <button
                       type="submit"
@@ -649,13 +742,7 @@ export default function ReviewPage() {
                     >
                       {isSubmitting ? (
                         <>
-                          <svg
-                            className="animate-spin h-5 w-5 text-[#1B2A4A]"
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            aria-hidden="true"
-                          >
+                          <svg className="animate-spin h-5 w-5 text-[#1B2A4A]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                           </svg>
@@ -669,6 +756,7 @@ export default function ReviewPage() {
                       Your review helps the next military family land on their feet.
                     </p>
                   </div>
+
                   <button type="button" onClick={() => setStep(3)} className="text-sm text-slate-500 underline text-center">← Back to Ratings</button>
                 </div>
               )}
